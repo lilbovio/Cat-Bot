@@ -1,0 +1,25 @@
+{
+  "name": "catbot",
+  "version": "1.0.0",
+  "description": "Bot multiusos de Discord en español (moderación, juegos, actividades y utilidades).",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "discord.js"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "discord.js": "^14.17.3",
+    "dotenv": "^16.4.7",
+    "mathjs": "^14.0.1",
+    "mongoose": "^8.9.2",
+    "nekos.life": "^3.0.0"
+  }
+}
