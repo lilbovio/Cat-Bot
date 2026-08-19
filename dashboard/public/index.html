@@ -59,7 +59,7 @@ input,select,textarea{font-family:inherit;outline:none}
   width:340px;
   box-shadow:0 24px 64px rgba(0,0,0,.6);
 }
-.login-cat{font-size:52px;display:block;margin-bottom:18px}
+.login-cat{display:block;margin-bottom:18px}
 .login-card h1{font-size:22px;font-weight:700;color:var(--white);margin-bottom:6px}
 .login-card .tagline{font-size:12px;color:var(--muted);margin-bottom:28px}
 .btn-login{
@@ -451,7 +451,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 <!-- LOGIN -->
 <div id="login-page">
   <div class="login-card">
-    <span class="login-cat">🐱</span>
+    <img src="/logo.png" class="login-cat" alt="CatBot" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 18px">
     <h1>CatBot</h1>
     <p class="tagline">El bot de Discord más felino</p>
     <a href="/auth/login" class="btn-login">
@@ -470,7 +470,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
     <nav class="sidebar">
       <div class="sb-header">
         <div class="sb-logo">
-          <div class="sb-logo-icon">🐱</div>
+          <div class="sb-logo-icon"><img src="/logo.png" alt="CatBot" style="width:26px;height:26px;object-fit:contain;border-radius:6px"></div>
           <div>
             <div class="sb-logo-name">CatBot</div>
             <div class="sb-logo-sub" id="sb-mode">Dashboard de Servidor</div>
@@ -793,7 +793,7 @@ const PAGES = {};
 PAGES['no-guild'] = async () => `
   <div class="page-hdr"><h2>Dashboard</h2><p>Panel de control de CatBot</p></div>
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;gap:16px;text-align:center">
-    <div style="font-size:64px">🐱</div>
+    <div><img src="/logo.png" alt="CatBot" style="width:96px;height:96px;object-fit:contain;opacity:.9"></div>
     <div style="font-size:18px;font-weight:700;color:var(--white)">Bienvenido al dashboard</div>
     <div style="font-size:13px;color:var(--muted);max-width:300px">Selecciona un servidor usando el botón <strong style="color:var(--text)">Cambiar Servidor</strong> para gestionar la configuración del bot.</div>
     <button class="btn btn-primary" onclick="openGuildModal()" style="margin-top:8px">
@@ -952,7 +952,7 @@ PAGES.welcome = async () => {
         <div class="card-title">${ICONS.welcome} Vista previa</div>
         <div class="wp-header">#bienvenidas</div>
         <div class="wp-box">
-          <div style="margin-bottom:6px;font-size:11px;color:var(--muted)">🐱 <strong style="color:var(--white)">CatBot</strong> AHORA</div>
+          <div style="margin-bottom:6px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px"><img src="/logo.png" style="width:16px;height:16px;object-fit:contain"> <strong style="color:var(--white)">CatBot</strong> AHORA</div>
           <div id="wc-preview">${wpPreview(prev)}</div>
         </div>
       </div>
