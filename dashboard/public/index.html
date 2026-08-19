@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CatBot Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:       #0d0e1a;
+  --bg-card:  #12141f;
+  --bg-card2: #181a28;
+  --bg-hover: #1e2030;
+  --border:   rgba(255,255,255,0.06);
+  --border-active: rgba(88,101,242,0.5);
+  --primary:  #7289da;
+  --accent:   #5865f2;
+  --accent-dk:#4752c4;
+  --green:    #3ba55c;
+  --green-dim:#2d7a45;
+  --red:      #ed4245;
+  --yellow:   #faa61a;
+  --text:     #e3e5e8;
+  --muted:    #72767d;
+  --muted2:   #4f5464;
+  --white:    #ffffff;
+  --sidebar-w:176px;
+  --topbar-h: 60px;
+  --radius:   12px;
+  --radius-sm:8px;
+  --tr:       .15s ease;
+}
+
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5}
+a{color:var(--accent);text-decoration:none}
+button{cursor:pointer;font-family:inherit;border:none;outline:none}
+input,select,textarea{font-family:inherit;outline:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
+
+/* ── LOGIN ───────────────────────────────────────────────────── */
+#login-page{
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  height:100vh;background:var(--bg);
+}
+#login-page.visible{display:flex}
+
+.login-card{
+  background:#12141f;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;
+  padding:48px 44px;
+  text-align:center;
+  width:340px;
+  box-shadow:0 24px 64px rgba(0,0,0,.6);
+}
+.login-cat{font-size:52px;display:block;margin-bottom:18px}
+.login-card h1{font-size:22px;font-weight:700;color:var(--white);margin-bottom:6px}
+.login-card .tagline{font-size:12px;color:var(--muted);margin-bottom:28px}
+.btn-login{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  width:100%;padding:12px;border-radius:var(--radius-sm);
+  background:var(--accent);color:#fff;font-size:13px;font-weight:600;
+  transition:background var(--tr);text-decoration:none;
+}
+.btn-login:hover{background:var(--accent-dk)}
+.login-back{font-size:11px;color:var(--muted);margin-top:16px;cursor:pointer}
+.login-back:hover{color:var(--text)}
+
+/* ── APP SHELL ───────────────────────────────────────────────── */
+#app{display:none;height:100vh;flex-direction:column}
+#app.ready{display:flex}
+.shell{display:flex;height:100%;overflow:hidden}
+
+/* ── SIDEBAR ─────────────────────────────────────────────────── */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:#0f1019;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100%;overflow:hidden;
+}
+.sb-header{
+  padding:18px 16px 14px;
+  border-bottom:1px solid var(--border);
+}
+.sb-logo{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sb-logo-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),var(--primary));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.sb-logo-name{font-size:14px;font-weight:700;color:var(--white)}
+.sb-logo-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.sb-switch{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg-card2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:7px 10px;
+  font-size:11px;color:var(--muted);cursor:pointer;
+  transition:var(--tr);width:100%;
+}
+.sb-switch:hover{background:var(--bg-hover);color:var(--text)}
+.sb-switch svg{width:12px;height:12px;flex-shrink:0}
+
+.nav{flex:1;overflow-y:auto;padding:10px 10px}
+.nav-sep{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--muted2);text-transform:uppercase;padding:12px 6px 4px}
+.nav-item{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;border-radius:var(--radius-sm);
+  color:var(--muted);font-size:12px;font-weight:500;
+  cursor:pointer;transition:var(--tr);margin-bottom:1px;
+  user-select:none;
+}
+.nav-item:hover{background:var(--bg-hover);color:var(--text)}
+.nav-item.active{background:var(--accent);color:#fff;font-weight:600}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.8}
+.nav-item.active svg{opacity:1}
+
+.sb-footer{padding:14px 12px;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.sb-av{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--bg-card2)}
+.sb-av-ph{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--primary));
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.sb-uname{font-size:12px;font-weight:600;color:var(--white);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-role{font-size:10px;color:var(--muted)}
+.sb-logout{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 10px;border-radius:var(--radius-sm);
+  color:var(--muted);font-size:12px;cursor:pointer;
+  transition:var(--tr);width:100%;background:none;
+}
+.sb-logout:hover{background:rgba(237,66,69,.1);color:var(--red)}
+.sb-logout svg{width:14px;height:14px}
+
+/* ── MAIN ────────────────────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+
+.topbar{
+  height:var(--topbar-h);flex-shrink:0;
+  background:#0f1019;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:12px;
+}
+.topbar-title{font-size:16px;font-weight:700;color:var(--white)}
+.topbar-badge{
+  font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;
+  background:rgba(237,66,69,.15);color:var(--red);border:1px solid rgba(237,66,69,.25);
+  margin-left:4px;
+}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.topbar-icon{
+  width:32px;height:32px;border-radius:var(--radius-sm);
+  background:var(--bg-card2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:var(--tr);color:var(--muted);
+}
+.topbar-icon:hover{background:var(--bg-hover);color:var(--text)}
+.topbar-icon svg{width:16px;height:16px}
+.topbar-av{width:32px;height:32px;border-radius:50%;object-fit:cover;cursor:pointer;border:2px solid var(--border)}
+
+.content{flex:1;overflow-y:auto;padding:28px}
+
+/* ── PAGE TRANSITIONS ────────────────────────────────────────── */
+.page{animation:pgIn .2s ease both}
+@keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.page-hdr{margin-bottom:24px}
+.page-hdr h2{font-size:22px;font-weight:700;color:var(--white);letter-spacing:-.3px}
+.page-hdr p{font-size:12px;color:var(--muted);margin-top:3px}
+.page-hdr p a,.page-hdr p span{color:var(--accent)}
+
+/* ── CARDS ───────────────────────────────────────────────────── */
+.card{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+}
+.card-title{
+  font-size:13px;font-weight:600;color:var(--white);
+  display:flex;align-items:center;gap:8px;margin-bottom:16px;
+}
+.card-title svg{width:16px;height:16px;color:var(--primary)}
+
+/* ── STAT CARDS ──────────────────────────────────────────────── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px 18px;
+  position:relative;overflow:hidden;
+}
+.stat-card-icon{
+  position:absolute;top:14px;right:14px;
+  width:36px;height:36px;border-radius:10px;
+  background:var(--bg-card2);
+  display:flex;align-items:center;justify-content:center;
+}
+.stat-card-icon svg{width:18px;height:18px;color:var(--primary)}
+.stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
+.stat-value{font-size:26px;font-weight:700;color:var(--white);line-height:1;letter-spacing:-.5px}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:4px}
+.stat-up{color:var(--green);font-weight:600}
+.stat-pill{
+  display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;
+  font-size:10px;font-weight:600;
+}
+.stat-pill.green{background:rgba(59,165,92,.15);color:var(--green);border:1px solid rgba(59,165,92,.25)}
+.stat-pill.red{background:rgba(237,66,69,.15);color:var(--red);border:1px solid rgba(237,66,69,.25)}
+
+/* ── GRID LAYOUTS ────────────────────────────────────────────── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* ── LEADERBOARD ─────────────────────────────────────────────── */
+.lb-row{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.lb-row:last-child{border-bottom:none}
+.lb-rank{width:24px;text-align:center;font-size:13px;font-weight:700;color:var(--muted);flex-shrink:0}
+.lb-rank.gold{color:#ffd700}
+.lb-rank.silver{color:#c0c0c0}
+.lb-rank.bronze{color:#cd7f32}
+.av{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--bg-card2)}
+.av-ph{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--primary));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.av-sm{width:26px;height:26px}
+.av-ph-sm{width:26px;height:26px;font-size:10px}
+.lb-info{flex:1;min-width:0}
+.lb-name{font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-level-lbl{font-size:10px;color:var(--muted);margin-top:1px}
+.lb-bar{height:3px;background:rgba(255,255,255,.08);border-radius:3px;margin-top:5px;overflow:hidden}
+.lb-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--primary))}
+.lb-xp{font-size:11px;color:var(--muted);white-space:nowrap;min-width:60px;text-align:right}
+.lv-pill{
+  display:inline-flex;align-items:center;padding:2px 8px;
+  border-radius:20px;font-size:10px;font-weight:600;
+  background:rgba(88,101,242,.15);color:var(--primary);
+  border:1px solid rgba(88,101,242,.25);white-space:nowrap;
+}
+
+/* ── TABLES ──────────────────────────────────────────────────── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{
+  padding:8px 12px;text-align:left;
+  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;
+}
+tbody td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+
+/* ── FORMS ───────────────────────────────────────────────────── */
+.form-row{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.form-row:last-child{margin-bottom:0}
+.form-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.form-hint{font-size:11px;color:var(--muted2)}
+.input,.select,.textarea{
+  background:var(--bg-card2);border:1px solid var(--border);
+  color:var(--text);border-radius:var(--radius-sm);
+  padding:9px 12px;font-size:12px;width:100%;transition:var(--tr);
+}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--border-active);background:var(--bg-hover)}
+.textarea{resize:vertical;min-height:80px}
+.select option{background:#181a28}
+.input-sm{max-width:160px}
+
+/* ── TOGGLE ──────────────────────────────────────────────────── */
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 0;border-bottom:1px solid var(--border);
+}
+.toggle-row:last-child{border-bottom:none}
+.toggle-row:first-child{padding-top:0}
+.tl-info .tl{font-size:13px;font-weight:500;color:var(--white)}
+.tl-info .ts{font-size:11px;color:var(--muted);margin-top:2px}
+.toggle{position:relative;width:42px;height:24px;flex-shrink:0}
+.toggle input{position:absolute;opacity:0;width:0;height:0}
+.tslider{
+  position:absolute;inset:0;
+  background:var(--bg-card2);border:1px solid rgba(255,255,255,.1);
+  border-radius:24px;cursor:pointer;transition:var(--tr);
+}
+.tslider::before{
+  content:'';position:absolute;
+  width:16px;height:16px;left:3px;top:3px;
+  background:var(--muted);border-radius:50%;
+  transition:var(--tr);
+}
+.toggle input:checked+.tslider{background:var(--accent);border-color:var(--accent)}
+.toggle input:checked+.tslider::before{transform:translateX(18px);background:#fff}
+.toggle input:disabled+.tslider{opacity:.5;cursor:not-allowed}
+
+/* ── BUTTONS ─────────────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 18px;border-radius:var(--radius-sm);
+  font-size:12px;font-weight:600;transition:var(--tr);
+  border:1px solid transparent;cursor:pointer;white-space:nowrap;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:none}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent-dk);border-color:var(--accent-dk)}
+.btn-danger{background:rgba(237,66,69,.12);color:var(--red);border-color:rgba(237,66,69,.25)}
+.btn-danger:hover{background:rgba(237,66,69,.22)}
+.btn-ghost{background:var(--bg-card2);color:var(--text);border-color:var(--border)}
+.btn-ghost:hover{background:var(--bg-hover)}
+.btn-green{background:rgba(59,165,92,.12);color:var(--green);border-color:rgba(59,165,92,.25)}
+.btn-green:hover{background:rgba(59,165,92,.22)}
+.btn-sm{padding:5px 12px;font-size:11px}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+/* ── PROGRESS BAR ────────────────────────────────────────────── */
+.prog-wrap{margin-bottom:4px}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}
+.prog-bg{height:7px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--primary));transition:width .4s ease}
+
+/* ── PILLS / BADGES ──────────────────────────────────────────── */
+.pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.pill-blue{background:rgba(88,101,242,.15);color:var(--primary);border:1px solid rgba(88,101,242,.25)}
+.pill-green{background:rgba(59,165,92,.15);color:var(--green);border:1px solid rgba(59,165,92,.25)}
+.pill-red{background:rgba(237,66,69,.15);color:var(--red);border:1px solid rgba(237,66,69,.25)}
+.pill-yellow{background:rgba(250,166,26,.15);color:var(--yellow);border:1px solid rgba(250,166,26,.25)}
+
+/* ── BLACKLIST ITEMS ─────────────────────────────────────────── */
+.bl-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;border-radius:var(--radius-sm);
+  background:rgba(237,66,69,.05);border:1px solid rgba(237,66,69,.1);
+  margin-bottom:6px;transition:var(--tr);
+}
+.bl-item:hover{background:rgba(237,66,69,.09)}
+.bl-id{font-family:monospace;font-size:12px;color:var(--muted);margin-top:2px}
+.bl-label{font-size:12px;font-weight:600;color:var(--white)}
+
+/* ── WELCOME PREVIEW ─────────────────────────────────────────── */
+.wp-box{
+  background:rgba(0,0,0,.25);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:14px;font-size:12px;margin-top:10px;
+}
+.wp-user{color:var(--accent);font-weight:600}
+.wp-header{color:var(--muted);font-size:11px;margin-bottom:6px}
+
+/* ── SYSTEM INFO ROWS ────────────────────────────────────────── */
+.info-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:12px;
+}
+.info-row:last-child{border-bottom:none}
+.info-row .label{color:var(--muted)}
+.info-row .val{color:var(--white);font-weight:600}
+
+/* ── GLOBAL SUMMARY ROWS ─────────────────────────────────────── */
+.gsum-row{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.gsum-row:last-child{border-bottom:none}
+.gsum-icon{
+  width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.gsum-icon svg{width:16px;height:16px}
+.gsum-icon.blue{background:rgba(88,101,242,.15)}
+.gsum-icon.blue svg{color:var(--primary)}
+.gsum-icon.green{background:rgba(59,165,92,.15)}
+.gsum-icon.green svg{color:var(--green)}
+.gsum-icon.red{background:rgba(237,66,69,.15)}
+.gsum-icon.red svg{color:var(--red)}
+.gsum-icon.yellow{background:rgba(250,166,26,.15)}
+.gsum-icon.yellow svg{color:var(--yellow)}
+.gsum-info{flex:1}
+.gsum-title{font-size:12px;font-weight:600;color:var(--white)}
+.gsum-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.gsum-val{font-size:14px;font-weight:700;color:var(--white)}
+
+/* ── EVENTS GRID ─────────────────────────────────────────────── */
+.events-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-top:8px}
+.ev-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);padding:3px 0}
+.ev-item svg{width:12px;height:12px;flex-shrink:0;color:var(--muted2)}
+
+/* ── SPINNER / LOADING ───────────────────────────────────────── */
+.spinner{
+  display:inline-block;width:18px;height:18px;
+  border:2px solid rgba(255,255,255,.08);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .55s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-center{display:flex;justify-content:center;align-items:center;padding:60px;gap:10px;color:var(--muted);font-size:12px}
+
+/* ── EMPTY STATE ─────────────────────────────────────────────── */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px;gap:10px;color:var(--muted);text-align:center}
+.empty-state svg{width:40px;height:40px;opacity:.3}
+.empty-state p{font-size:12px;max-width:260px;line-height:1.5}
+
+/* ── TOAST ───────────────────────────────────────────────────── */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  padding:11px 18px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;
+  background:#1e2030;border:1px solid var(--border);
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+  opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .25s;transform:translateY(6px);
+}
+#toast.show{opacity:1;transform:none}
+#toast.ok{border-color:rgba(59,165,92,.4);color:var(--green)}
+#toast.err{border-color:rgba(237,66,69,.4);color:var(--red)}
+
+/* ── ADD ROW ─────────────────────────────────────────────────── */
+.add-row{display:flex;gap:8px}
+.add-row .input{flex:1}
+
+/* ── PAGINATION ──────────────────────────────────────────────── */
+.pager{display:flex;align-items:center;gap:4px;justify-content:center;margin-top:16px}
+.pager-btn{
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;
+  transition:var(--tr);background:none;border:1px solid var(--border);color:var(--muted);
+}
+.pager-btn:hover{background:var(--bg-hover);color:var(--text)}
+.pager-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pager-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+@media(max-width:900px){
+  :root{--sidebar-w:54px}
+  .sb-logo-name,.sb-logo-sub,.nav-sep,.nav-item span,.sb-uname,.sb-role,.sb-header .sb-switch{display:none}
+  .sb-switch{justify-content:center;padding:7px}
+  .sb-footer{padding:10px 6px}
+  .sb-user{justify-content:center}
+  .sb-logout span{display:none}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .grid2,.grid3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-page">
+  <div class="login-card">
+    <span class="login-cat">🐱</span>
+    <h1>CatBot</h1>
+    <p class="tagline">El bot de Discord más felino</p>
+    <a href="/auth/login" class="btn-login">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.001.022.015.04.033.05a19.91 19.91 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+      Iniciar sesión con Discord
+    </a>
+    <p class="login-back">Regresar al sitio principal</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="shell">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sb-header">
+        <div class="sb-logo">
+          <div class="sb-logo-icon">🐱</div>
+          <div>
+            <div class="sb-logo-name">CatBot</div>
+            <div class="sb-logo-sub" id="sb-mode">Dashboard de Servidor</div>
+          </div>
+        </div>
+        <button class="sb-switch" id="sb-switch-btn" onclick="openGuildModal()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4M4 17h12m0 0l-4-4m4 4l-4 4"/></svg>
+          <span>Cambiar Servidor</span>
+        </button>
+      </div>
+
+      <div class="nav" id="sidebar-nav"></div>
+
+      <div class="sb-footer">
+        <div class="sb-user">
+          <img class="sb-av" id="sb-av" src="" alt="" style="display:none">
+          <div class="sb-av-ph" id="sb-av-ph">?</div>
+          <div style="flex:1;min-width:0">
+            <div class="sb-uname" id="sb-uname">—</div>
+            <div class="sb-role" id="sb-role">Usuario</div>
+          </div>
+        </div>
+        <button class="sb-logout" onclick="window.location='/auth/logout'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <span>Cerrar Sesión</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <span class="topbar-title" id="topbar-title">Cargando…</span>
+          <span class="topbar-badge" id="owner-badge" style="display:none">Owner Mode</span>
+        </div>
+        <div class="topbar-right">
+          <div class="topbar-icon" title="Bot en línea">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="color:var(--green)"><circle cx="12" cy="12" r="4"/></svg>
+          </div>
+          <div class="topbar-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+          <div class="topbar-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <img class="topbar-av" id="tb-av" src="" alt="" style="display:none">
+          <div class="sb-av-ph" id="tb-av-ph" style="width:32px;height:32px;font-size:11px">?</div>
+        </div>
+      </div>
+      <div class="content" id="content">
+        <div class="loading-center"><div class="spinner"></div> Cargando…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- GUILD MODAL -->
+<div id="guild-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+  <div style="background:#12141f;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:24px;width:400px;max-width:90vw;max-height:80vh;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:700;color:var(--white)">Seleccionar Servidor</div>
+      <button onclick="closeGuildModal()" style="background:none;color:var(--muted);font-size:18px;padding:4px 8px;border-radius:6px" class="btn-ghost btn-sm">✕</button>
+    </div>
+    <div id="guild-list" style="overflow-y:auto;display:flex;flex-direction:column;gap:6px;max-height:50vh"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+let ME = null, GUILDS = [], CURRENT_GUILD = null, GUILD_INFO = null;
+const LB_PAGE_SIZE = 10;
+
+// ══════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════
+async function boot() {
+  const me = await api('/auth/me');
+  if (!me.user) { show('login-page'); return; }
+  ME = me.user;
+  show('app');
+
+  // Topbar avatar
+  const tbAv = document.getElementById('tb-av');
+  const tbPh = document.getElementById('tb-av-ph');
+  if (ME.avatarUrl) { tbAv.src = ME.avatarUrl; tbAv.style.display='block'; tbPh.style.display='none'; }
+  else { tbPh.textContent = ME.username.slice(0,2).toUpperCase(); }
+
+  // Sidebar avatar
+  const sbAv = document.getElementById('sb-av');
+  const sbPh = document.getElementById('sb-av-ph');
+  if (ME.avatarUrl) { sbAv.src = ME.avatarUrl; sbAv.style.display='block'; sbPh.style.display='none'; }
+  else { sbPh.textContent = ME.username.slice(0,2).toUpperCase(); }
+
+  document.getElementById('sb-uname').textContent = ME.username;
+
+  if (ME.isOwner) {
+    document.getElementById('sb-role').textContent = '🔴 Creador';
+    document.getElementById('sb-role').style.color = 'var(--red)';
+    document.getElementById('sb-mode').textContent = 'Panel Admin';
+    document.getElementById('owner-badge').style.display = 'inline';
+    renderAdminSidebar();
+    navigateTo('admin-overview');
+  } else {
+    document.getElementById('sb-switch-btn').style.display = 'flex';
+    await loadGuilds();
+    renderUserSidebar();
+    navigateTo('no-guild');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// GUILDS
+// ══════════════════════════════════════════════════════════════
+async function loadGuilds() {
+  try { GUILDS = await api('/api/guilds'); } catch { GUILDS = []; }
+}
+
+function openGuildModal() {
+  const list = document.getElementById('guild-list');
+  list.innerHTML = '';
+  if (!GUILDS.length) {
+    list.innerHTML = '<div class="empty-state" style="padding:24px"><p>No tienes servidores donde gestionar el bot.</p></div>';
+  }
+  GUILDS.forEach(g => {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--bg-card2);transition:.15s ease';
+    div.onmouseenter = () => div.style.background = 'var(--bg-hover)';
+    div.onmouseleave = () => div.style.background = 'var(--bg-card2)';
+    const icon = g.icon
+      ? `<img src="${g.icon}" style="width:32px;height:32px;border-radius:8px;flex-shrink:0">`
+      : `<div style="width:32px;height:32px;border-radius:8px;background:var(--bg-card);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0">${g.name.slice(0,2).toUpperCase()}</div>`;
+    div.innerHTML = icon + `<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(g.name)}</div><div style="font-size:11px;color:var(--muted)">${g.botPresent ? 'Bot presente' : '⚠️ Bot no instalado'}</div></div>`;
+    div.onclick = () => { closeGuildModal(); selectGuild(g.id); };
+    list.appendChild(div);
+  });
+  document.getElementById('guild-modal').style.display = 'flex';
+}
+function closeGuildModal() { document.getElementById('guild-modal').style.display = 'none'; }
+
+async function selectGuild(guildId) {
+  CURRENT_GUILD = GUILDS.find(g => g.id === guildId) || null;
+  if (!CURRENT_GUILD?.botPresent) { showToast('El bot no está en ese servidor. Invítalo primero.','err'); return; }
+  document.getElementById('sb-mode').textContent = CURRENT_GUILD.name;
+  try { GUILD_INFO = await api(`/api/guilds/${guildId}/info`); } catch { GUILD_INFO = null; }
+  renderUserSidebar();
+  navigateTo('overview');
+}
+
+// ══════════════════════════════════════════════════════════════
+// SIDEBARS
+// ══════════════════════════════════════════════════════════════
+const ICONS = {
+  overview:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>`,
+  general:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  welcome:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+  logs:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+  autorole:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  leveling:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+  moderation:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  economy:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+  tickets:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z"/></svg>`,
+  automod:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>`,
+  stats:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+  servers:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6" y2="6"/><line x1="6" y1="18" x2="6" y2="18"/></svg>`,
+  blacklist:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`,
+};
+
+function renderUserSidebar() {
+  const nav = document.getElementById('sidebar-nav');
+  nav.innerHTML = navSection('General') +
+    navItem('overview','Resumen') +
+    navSection('Configuración') +
+    navItem('general','General') +
+    navItem('welcome','Bienvenidas') +
+    navItem('logs','Logs') +
+    navItem('autorole','Auto-rol') +
+    navSection('Módulos') +
+    navItem('leveling','Nivelación') +
+    navItem('economy','Economía') +
+    navItem('tickets','Tickets') +
+    navItem('moderation','Moderación') +
+    navItem('automod','Automod');
+  bindNav();
+}
+
+function renderAdminSidebar() {
+  const nav = document.getElementById('sidebar-nav');
+  nav.innerHTML = navSection('Bot Global') +
+    navItem('admin-overview','Estadísticas') +
+    navItem('admin-servers','Servidores') +
+    navItem('admin-blacklist','Blacklist');
+  bindNav();
+}
+
+function navSection(label) {
+  return `<div class="nav-sep">${label}</div>`;
+}
+function navItem(page, label) {
+  const icon = ICONS[page] || ICONS.general;
+  return `<div class="nav-item" data-page="${page}">${icon}<span>${label}</span></div>`;
+}
+function bindNav() {
+  document.querySelectorAll('.nav-item[data-page]').forEach(el =>
+    el.addEventListener('click', () => navigateTo(el.dataset.page)));
+}
+
+// ══════════════════════════════════════════════════════════════
+// ROUTER
+// ══════════════════════════════════════════════════════════════
+const PAGE_TITLES = {
+  'overview':'Resumen General','general':'Configuración General',
+  'welcome':'Bienvenidas','logs':'Canal de Logs',
+  'autorole':'Auto-rol','leveling':'Nivelación','moderation':'Moderación',
+  'economy':'Economía','tickets':'Tickets de Soporte','automod':'Automoderación',
+  'admin-overview':'Estadísticas Globales','admin-servers':'Servidores',
+  'admin-blacklist':'Blacklist Global','no-guild':'Dashboard',
+};
+
+// Global auto-refresh handle — cleared whenever navigateTo() is called
+let _autoRefreshTimer = null;
+
+async function navigateTo(page) {
+  // Cancel any running auto-refresh from the previous page
+  if (_autoRefreshTimer) { clearInterval(_autoRefreshTimer); _autoRefreshTimer = null; }
+
+  document.querySelectorAll('.nav-item[data-page]').forEach(el =>
+    el.classList.toggle('active', el.dataset.page === page));
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
+  const c = document.getElementById('content');
+  c.innerHTML = '<div class="loading-center"><div class="spinner"></div> Cargando…</div>';
+  try {
+    const html = await (PAGES[page]?.() ?? Promise.resolve(emptyState('🚧','Página no encontrada.')));
+    c.innerHTML = `<div class="page">${html}</div>`;
+    PAGES[page+'_init']?.();
+  } catch(e) {
+    c.innerHTML = `<div class="page">${emptyState('❌', esc(e.message))}</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// API HELPER
+// ══════════════════════════════════════════════════════════════
+async function api(path, opts={}) {
+  const r = await fetch(path, {
+    headers:{'Content-Type':'application/json'},
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (!r.ok) { const j = await r.json().catch(()=>({})); throw new Error(j.error || r.statusText); }
+  return r.json();
+}
+async function patchConfig(data) {
+  if (!CURRENT_GUILD) { showToast('Selecciona un servidor primero','err'); return; }
+  await api(`/api/guilds/${CURRENT_GUILD.id}/config`,{method:'PATCH',body:data});
+  showToast('Configuración guardada');
+}
+
+// ══════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════
+function show(id) { document.getElementById(id).classList.add(id==='login-page'?'visible':'ready'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function timeAgo(d) {
+  const s=Math.floor((Date.now()-new Date(d))/1000);
+  if(s<60)return'hace un momento';
+  if(s<3600)return`hace ${Math.floor(s/60)} min`;
+  if(s<86400)return`hace ${Math.floor(s/3600)} h`;
+  return`hace ${Math.floor(s/86400)} días`;
+}
+function emptyState(icon, text) {
+  return `<div class="empty-state"><div style="font-size:40px;opacity:.4">${icon}</div><p>${text}</p></div>`;
+}
+function noGuildState(icon) {
+  return `<div class="empty-state"><div style="font-size:40px;opacity:.3">${icon}</div><p>Selecciona un servidor usando el botón <strong>Cambiar Servidor</strong> en la barra lateral.</p></div>`;
+}
+function channelOpts(sel) {
+  if (!GUILD_INFO?.channels?.length) return '<option value="">— Sin canales —</option>';
+  return '<option value="">— Sin configurar —</option>' +
+    GUILD_INFO.channels.map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>#${esc(c.name)}</option>`).join('');
+}
+function roleOpts(sel) {
+  if (!GUILD_INFO?.roles?.length) return '<option value="">— Sin roles —</option>';
+  return '<option value="">— Sin configurar —</option>' +
+    GUILD_INFO.roles.map(r=>`<option value="${r.id}"${r.id===sel?' selected':''}>${esc(r.name)}</option>`).join('');
+}
+function avHTML(u, sm=false) {
+  const cls  = sm ? 'av av-sm' : 'av';
+  const phCls = sm ? 'av-ph av-ph-sm' : 'av-ph';
+  const init = (u?.username||'?').slice(0,2).toUpperCase();
+  if (u?.avatar) return `<img class="${cls}" src="${esc(u.avatar)}" alt="">`;
+  return `<div class="${phCls}">${init}</div>`;
+}
+function rankBadge(i) {
+  if(i===0) return `<span style="font-size:18px">🥇</span>`;
+  if(i===1) return `<span style="font-size:18px">🥈</span>`;
+  if(i===2) return `<span style="font-size:18px">🥉</span>`;
+  return `<span style="font-size:13px;font-weight:700;color:var(--muted)">${i+1}</span>`;
+}
+function showToast(msg, type='ok') {
+  const t=document.getElementById('toast');
+  t.textContent=(type==='ok'?'✅  ':'❌  ')+msg;
+  t.className='show '+type;
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>{t.className='';},3200);
+}
+
+// ══════════════════════════════════════════════════════════════
+// PAGES
+// ══════════════════════════════════════════════════════════════
+const PAGES = {};
+
+/* ─ no-guild ─ */
+PAGES['no-guild'] = async () => `
+  <div class="page-hdr"><h2>Dashboard</h2><p>Panel de control de CatBot</p></div>
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;gap:16px;text-align:center">
+    <div style="font-size:64px">🐱</div>
+    <div style="font-size:18px;font-weight:700;color:var(--white)">Bienvenido al dashboard</div>
+    <div style="font-size:13px;color:var(--muted);max-width:300px">Selecciona un servidor usando el botón <strong style="color:var(--text)">Cambiar Servidor</strong> para gestionar la configuración del bot.</div>
+    <button class="btn btn-primary" onclick="openGuildModal()" style="margin-top:8px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M8 7h12m0 0l-4-4m4 4l-4 4M4 17h12m0 0l-4-4m4 4l-4 4"/></svg>
+      Seleccionar servidor
+    </button>
+  </div>`;
+
+/* ── OVERVIEW ─────────────────────────────────────────────────────── */
+PAGES.overview = async () => {
+  if (!CURRENT_GUILD) return noGuildState('🏠');
+  const gid = CURRENT_GUILD.id;
+  const [cfg, lb, warns] = await Promise.all([
+    api(`/api/guilds/${gid}/config`),
+    api(`/api/guilds/${gid}/leaderboard`),
+    api(`/api/guilds/${gid}/warns`),
+  ]);
+  const totalWarns = warns.reduce((a,w) => a + w.warns.length, 0);
+  const avgLevel = lb.length ? Math.round(lb.reduce((a,u) => a + u.level, 0) / lb.length) : 0;
+  const topXp = lb[0]?.xp || 1;
+  const isLevelingActive = cfg.levelingEnabled !== false;
+
+  const lbRows = lb.slice(0,3).map((u,i) => {
+    const pct = Math.round(u.xp / topXp * 100);
+    const cls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const av  = avHTML(u, true);
+    return `<div class="lb-row">
+      <div class="lb-rank ${cls}">${i===0?'#1':i===1?'#2':'#3'}</div>
+      ${av}
+      <div class="lb-info">
+        <div class="lb-name">${esc(u.username)}</div>
+        <div class="lb-bar"><div class="lb-bar-fill" style="width:${pct}%"></div></div>
+      </div>
+      <span class="lv-pill">NIVEL ${u.level}</span>
+    </div>`;
+  }).join('') || `<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Sin datos de XP aún.</div>`;
+
+  const modRows = [
+    ['Nivelación', ICONS.leveling, isLevelingActive, 'ov-level', true],
+    ['Bienvenidas', ICONS.welcome, !!cfg.welcomeChannel, 'ov-welcome', false],
+    ['Logs', ICONS.logs, !!cfg.logsChannel, 'ov-logs', false],
+    ['Auto-rol', ICONS.autorole, !!cfg.autoRole, 'ov-autorole', false],
+  ].map(([label, icon, checked, id, interactive]) => `
+    <div class="toggle-row">
+      <div class="tl-info" style="display:flex;align-items:center;gap:8px">
+        <span style="width:16px;height:16px;color:var(--muted);flex-shrink:0">${icon}</span>
+        <div class="tl">${label}</div>
+      </div>
+      <label class="toggle"><input type="checkbox" id="${id}" ${checked?'checked':''} ${interactive?'':'disabled'}><span class="tslider"></span></label>
+    </div>`).join('');
+
+  return `
+    <div class="page-hdr"><h2>Resumen General</h2><p>Métricas y estado actual de tu <span>${esc(CURRENT_GUILD.name)}</span></p></div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="stat-label">Miembros</div>
+        <div class="stat-value">${(GUILD_INFO?.memberCount||0).toLocaleString()}</div>
+        <div class="stat-sub">en el servidor</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--red)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="stat-label">Warns Activos</div>
+        <div class="stat-value">${totalWarns}</div>
+        <div class="stat-sub">Últimos 7 días</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--primary)"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+        <div class="stat-label">Nivel Promedio</div>
+        <div class="stat-value">${avgLevel}</div>
+        <div class="stat-sub">top: ${lb[0]?.level??0}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:${isLevelingActive?'var(--green)':'var(--red)'}"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="stat-label">Nivelación</div>
+        <div class="stat-value" style="font-size:18px;margin-top:6px">
+          <span class="stat-pill ${isLevelingActive?'green':'red'}">${isLevelingActive?'Activa':'Inactiva'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+          Top XP
+        </div>
+        ${lbRows}
+      </div>
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Módulos
+        </div>
+        ${modRows}
+      </div>
+    </div>`;
+};
+PAGES.overview_init = () => {
+  document.getElementById('ov-level')?.addEventListener('change', async e => {
+    try { await patchConfig({ levelingEnabled: e.target.checked }); }
+    catch(err) { showToast(err.message,'err'); e.target.checked = !e.target.checked; }
+  });
+};
+
+/* ── GENERAL ──────────────────────────────────────────────────────── */
+PAGES.general = async () => {
+  if (!CURRENT_GUILD) return noGuildState('⚙️');
+  const cfg = await api(`/api/guilds/${CURRENT_GUILD.id}/config`);
+  return `
+    <div class="page-hdr"><h2>Configuración General</h2><p>Ajustes básicos del bot en este servidor</p></div>
+    <div class="card">
+      <div class="card-title">${ICONS.general} Ajustes básicos</div>
+      <div class="form-row">
+        <div class="form-label">Prefijo de comandos</div>
+        <input class="input input-sm" id="cfg-prefix" value="${esc(cfg.prefix||'!')}" maxlength="5" placeholder="!">
+        <div class="form-hint">1–5 caracteres · Ejemplo: <code style="background:var(--bg-card2);padding:1px 5px;border-radius:4px">!help</code></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-primary" onclick="saveGeneral()">💾 Guardar cambios</button></div>
+    </div>`;
+};
+async function saveGeneral() {
+  const v = document.getElementById('cfg-prefix')?.value?.trim();
+  if (!v || v.length > 5) { showToast('Prefijo inválido (1–5 caracteres)','err'); return; }
+  try { await patchConfig({ prefix: v }); } catch(e) { showToast(e.message,'err'); }
+}
+
+/* ── WELCOME ──────────────────────────────────────────────────────── */
+PAGES.welcome = async () => {
+  if (!CURRENT_GUILD) return noGuildState('👋');
+  const cfg = await api(`/api/guilds/${CURRENT_GUILD.id}/config`);
+  const prev = cfg.welcomeMessage || '{usuario} ¡bienvenido al servidor!';
+  return `
+    <div class="page-hdr"><h2>Mensajes de Bienvenida</h2><p>Personaliza cómo se recibe a los nuevos miembros</p></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">${ICONS.welcome} Configurar</div>
+        <div class="form-row">
+          <div class="form-label">Canal</div>
+          <select class="select" id="wc-channel">${channelOpts(cfg.welcomeChannel)}</select>
+        </div>
+        <div class="form-row">
+          <div class="form-label">Mensaje</div>
+          <textarea class="textarea" id="wc-msg" placeholder="{usuario} ¡bienvenido!">${esc(cfg.welcomeMessage||'')}</textarea>
+          <div class="form-hint">Usa <strong>{usuario}</strong> para mencionar al nuevo miembro.</div>
+        </div>
+        <div class="form-row">
+          <div class="form-label">URL de imagen (opcional)</div>
+          <input class="input" id="wc-img" value="${esc(cfg.welcomeImage||'')}" placeholder="https://...">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-danger btn-sm" onclick="disableWelcome()">Desactivar</button>
+          <button class="btn btn-primary" onclick="saveWelcome()">💾 Guardar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">${ICONS.welcome} Vista previa</div>
+        <div class="wp-header">#bienvenidas</div>
+        <div class="wp-box">
+          <div style="margin-bottom:6px;font-size:11px;color:var(--muted)">🐱 <strong style="color:var(--white)">CatBot</strong> AHORA</div>
+          <div id="wc-preview">${wpPreview(prev)}</div>
+        </div>
+      </div>
+    </div>`;
+};
+PAGES.welcome_init = () => {
+  document.getElementById('wc-msg')?.addEventListener('input', e => {
+    const p = document.getElementById('wc-preview');
+    if (p) p.innerHTML = wpPreview(e.target.value);
+  });
+};
+function wpPreview(msg) { return esc(msg).replace(/\{usuario\}/g,'<span class="wp-user">@NuevoUsuario</span>'); }
+async function saveWelcome() {
+  try {
+    await patchConfig({
+      welcomeChannel: document.getElementById('wc-channel').value || null,
+      welcomeMessage: document.getElementById('wc-msg').value || null,
+      welcomeImage:   document.getElementById('wc-img').value || null,
+    });
+  } catch(e) { showToast(e.message,'err'); }
+}
+async function disableWelcome() {
+  try { await patchConfig({ welcomeChannel:null,welcomeMessage:null,welcomeImage:null }); navigateTo('welcome'); }
+  catch(e) { showToast(e.message,'err'); }
+}
+
+/* ── LOGS ─────────────────────────────────────────────────────────── */
+PAGES.logs = async () => {
+  if (!CURRENT_GUILD) return noGuildState('📋');
+  const cfg = await api(`/api/guilds/${CURRENT_GUILD.id}/config`);
+  const events = [
+    ['📥','Miembro entró / salió'],['✏️','Mensajes editados/borrados'],
+    ['👢','Kicks detectados'],['📢','Canales modificados'],
+    ['🔨','Bans y unbans'],['🏷️','Roles modificados'],
+    ['⏱️','Timeouts aplicados'],['🔊','Movimientos de voz'],
+    ['😀','Emojis creados/borrados'],['🔗','Invitaciones'],
+  ];
+  return `
+    <div class="page-hdr"><h2>Canal de Logs</h2><p>Registra eventos de moderación en un canal de texto</p></div>
+    <div class="card">
+      <div class="card-title">${ICONS.logs} Configurar</div>
+      <div class="form-row">
+        <div class="form-label">Canal de logs</div>
+        <select class="select" id="logs-ch">${channelOpts(cfg.logsChannel)}</select>
+      </div>
+      <div class="form-row">
+        <div class="form-label">Eventos registrados</div>
+        <div class="events-grid">
+          ${events.map(([ic,lbl])=>`<div class="ev-item"><span>${ic}</span>${lbl}</div>`).join('')}
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-danger btn-sm" onclick="disableLogs()">Desactivar logs</button>
+        <button class="btn btn-primary" onclick="saveLogs()">💾 Guardar</button>
+      </div>
+    </div>`;
+};
+async function saveLogs() {
+  try { await patchConfig({ logsChannel: document.getElementById('logs-ch').value || null }); }
+  catch(e) { showToast(e.message,'err'); }
+}
+async function disableLogs() {
+  try { await patchConfig({ logsChannel:null }); navigateTo('logs'); }
+  catch(e) { showToast(e.message,'err'); }
+}
+
+/* ── AUTOROLE ─────────────────────────────────────────────────────── */
+PAGES.autorole = async () => {
+  if (!CURRENT_GUILD) return noGuildState('🎭');
+  const cfg = await api(`/api/guilds/${CURRENT_GUILD.id}/config`);
+  return `
+    <div class="page-hdr"><h2>Auto-rol</h2><p>Rol asignado automáticamente a nuevos miembros al unirse</p></div>
+    <div class="card">
+      <div class="card-title">${ICONS.autorole} Configurar auto-rol</div>
+      <div class="form-row">
+        <div class="form-label">Rol</div>
+        <select class="select" id="ar-role" style="max-width:320px">${roleOpts(cfg.autoRole)}</select>
+        <div class="form-hint">El bot debe tener un rol superior al rol seleccionado para poder asignarlo.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-danger btn-sm" onclick="disableAutorole()">Desactivar</button>
+        <button class="btn btn-primary" onclick="saveAutorole()">💾 Guardar</button>
+      </div>
+    </div>`;
+};
+async function saveAutorole() {
+  try { await patchConfig({ autoRole: document.getElementById('ar-role').value || null }); }
+  catch(e) { showToast(e.message,'err'); }
+}
+async function disableAutorole() {
+  try { await patchConfig({ autoRole:null }); navigateTo('autorole'); }
+  catch(e) { showToast(e.message,'err'); }
+}
+
+/* ── LEVELING ─────────────────────────────────────────────────────── */
+let LB_CUR_PAGE = 0;
+let LB_DATA = [];
+
+PAGES.leveling = async () => {
+  if (!CURRENT_GUILD) return noGuildState('📈');
+  const [cfg, lb] = await Promise.all([
+    api(`/api/guilds/${CURRENT_GUILD.id}/config`),
+    api(`/api/guilds/${CURRENT_GUILD.id}/leaderboard`),
+  ]);
+  LB_DATA = lb;
+  LB_CUR_PAGE = 0;
+  return `
+    <div class="page-hdr"><h2>Nivelación</h2><p>Configura el sistema de <span>experiencia</span> y recompensa a los miembros más activos de tu <span>comunidad</span>.</p></div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">${ICONS.general} Ajustes</div>
+      <div class="toggle-row">
+        <div class="tl-info">
+          <div class="tl">Activar nivelación</div>
+          <div class="ts">Los usuarios ganarán XP por cada mensaje enviado.</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="lv-on" ${cfg.levelingEnabled!==false?'checked':''}><span class="tslider"></span></label>
+      </div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn btn-danger btn-sm" onclick="resetAllLevels()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Resetear todo
+        </button>
+        <button class="btn btn-primary" onclick="saveLeveling()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Guardar
+        </button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+          Leaderboard completo
+          <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:4px">· ${lb.length} usuarios</span>
+        </div>
+      </div>
+      <div id="lb-table-wrap"></div>
+      <div id="lb-pager"></div>
+    </div>`;
+};
+PAGES.leveling_init = () => {
+  renderLbPage(0);
+};
+
+function renderLbPage(page) {
+  LB_CUR_PAGE = page;
+  const topXp = LB_DATA[0]?.xp || 1;
+  const total = Math.ceil(LB_DATA.length / LB_PAGE_SIZE);
+  const slice = LB_DATA.slice(page * LB_PAGE_SIZE, (page + 1) * LB_PAGE_SIZE);
+  const wrap = document.getElementById('lb-table-wrap');
+  const pagerEl = document.getElementById('lb-pager');
+  if (!wrap) return;
+
+  if (!slice.length) {
+    wrap.innerHTML = '<div style="padding:32px;text-align:center;color:var(--muted);font-size:12px">Sin datos de nivelación aún.</div>';
+    if (pagerEl) pagerEl.innerHTML = '';
+    return;
+  }
+
+  const rows = slice.map((u, i) => {
+    const globalIdx = page * LB_PAGE_SIZE + i;
+    const pct = Math.round(u.xp / topXp * 100);
+    const av = avHTML(u, true);
+    return `<tr>
+      <td style="width:40px">${rankBadge(globalIdx)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:9px">
+          ${av}
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--white)">${esc(u.username)}</div>
+            <div style="font-size:10px;color:var(--muted)">ID: ${u.userId}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="lv-pill">Lv ${u.level}</span></td>
+      <td style="color:var(--white);font-weight:600">${u.xp.toLocaleString()}</td>
+      <td style="color:var(--muted)">${u.messages.toLocaleString()}</td>
+      <td style="min-width:100px"><div class="lb-bar" style="height:5px"><div class="lb-bar-fill" style="width:${pct}%"></div></div></td>
+      <td><button class="btn btn-danger btn-sm" onclick="resetUserLevel('${u.userId}')">Reset</button></td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Usuario</th><th>Nivel</th><th>XP</th><th>Mensajes</th><th>Progreso</th><th>Acción</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+
+  if (total <= 1) { if (pagerEl) pagerEl.innerHTML = ''; return; }
+
+  let pagerHTML = '<div class="pager">';
+  pagerHTML += `<button class="pager-btn" onclick="renderLbPage(${page-1})" ${page===0?'disabled':''}>‹</button>`;
+  for (let p=0; p<total; p++) {
+    if (total > 7 && p > 1 && p < total-1 && Math.abs(p-page) > 1) {
+      if (p === 2 || p === total-2) pagerHTML += '<span style="color:var(--muted);padding:0 4px">…</span>';
+      continue;
+    }
+    pagerHTML += `<button class="pager-btn ${p===page?'active':''}" onclick="renderLbPage(${p})">${p+1}</button>`;
+  }
+  pagerHTML += `<button class="pager-btn" onclick="renderLbPage(${page+1})" ${page>=total-1?'disabled':''}>›</button>`;
+  pagerHTML += '</div>';
+  if (pagerEl) pagerEl.innerHTML = pagerHTML;
+}
+
+async function saveLeveling() {
+  try { await patchConfig({ levelingEnabled: document.getElementById('lv-on').checked }); }
+  catch(e) { showToast(e.message,'err'); }
+}
+async function resetUserLevel(userId) {
+  if (!confirm('¿Resetear el nivel de este usuario?')) return;
+  try {
+    await api(`/api/guilds/${CURRENT_GUILD.id}/leaderboard/${userId}`,{method:'DELETE'});
+    showToast('Nivel reseteado');
+    LB_DATA = LB_DATA.filter(u => u.userId !== userId);
+    renderLbPage(LB_CUR_PAGE);
+  } catch(e) { showToast(e.message,'err'); }
+}
+async function resetAllLevels() {
+  if (!confirm('¿Resetear TODOS los niveles del servidor? Esta acción no se puede deshacer.')) return;
+  try {
+    await api(`/api/guilds/${CURRENT_GUILD.id}/leaderboard`,{method:'DELETE'});
+    showToast('Todos los niveles reseteados');
+    LB_DATA = [];
+    renderLbPage(0);
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+/* ── MODERATION ───────────────────────────────────────────────────── */
+PAGES.moderation = async () => {
+  if (!CURRENT_GUILD) return noGuildState('🛡️');
+  const warns = await api(`/api/guilds/${CURRENT_GUILD.id}/warns`);
+  const active = warns.filter(w => w.warns.length > 0);
+  if (!active.length) return `
+    <div class="page-hdr"><h2>Moderación</h2><p>Warns registrados en el servidor</p></div>
+    <div class="card">
+      <div class="card-title">${ICONS.moderation} Warns activos · 0 usuario(s)</div>
+      <div class="empty-state" style="padding:32px">
+        <div style="font-size:36px">🎉</div>
+        <p>No hay warns registrados en este servidor.</p>
+      </div>
+    </div>`;
+
+  const rows = active.map(w => {
+    const last = w.warns[w.warns.length-1];
+    const cnt  = w.warns.length;
+    const pillCls = cnt>=4?'pill-red':cnt>=2?'pill-yellow':'pill-blue';
+    return `<tr>
+      <td><code style="font-size:11px;color:var(--muted)">${w.userId}</code></td>
+      <td><span class="pill ${pillCls}">${cnt} warn${cnt!==1?'s':''}</span></td>
+      <td style="color:var(--muted)">${timeAgo(last.date)}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(last.reason||'—')}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="clearWarns('${w.userId}')">Limpiar</button></td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="page-hdr"><h2>Moderación</h2><p>Warns registrados en el servidor</p></div>
+    <div class="card">
+      <div class="card-title">${ICONS.moderation} Warns activos · ${active.length} usuario(s)</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Usuario ID</th><th>Warns</th><th>Último</th><th>Razón</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>`;
+};
+async function clearWarns(userId) {
+  if (!confirm('¿Borrar todos los warns de este usuario?')) return;
+  try { await api(`/api/guilds/${CURRENT_GUILD.id}/warns/${userId}`,{method:'DELETE'}); showToast('Warns eliminados'); navigateTo('moderation'); }
+  catch(e) { showToast(e.message,'err'); }
+}
+
+/* ── ADMIN OVERVIEW ───────────────────────────────────────────────── */
+// ── Admin overview: static skeleton, data injected by updateAdminStats() ──────
+PAGES['admin-overview'] = async () => {
+  // Fetch the first batch of stats so the page doesn't flash empty
+  const stats = await api('/api/stats');
+  const ramPct = Math.round(stats.ram / stats.ramTotal * 100);
+  const ramColor = ramPct>80?'var(--red)':ramPct>55?'var(--yellow)':'var(--accent)';
+  return `
+    <div class="page-hdr" style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h2>Estadísticas Globales</h2>
+        <p>Actualización automática cada <span>10 segundos</span></p>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)" id="ao-refresh-status">
+        <span id="ao-dot" style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>
+        En vivo
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6" y2="6"/><line x1="6" y1="18" x2="6" y2="18"/></svg></div>
+        <div class="stat-label">Servidores</div>
+        <div class="stat-value" id="ao-guilds">${stats.guilds}</div>
+        <div class="stat-sub"><span class="stat-up">↑</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="stat-label">Usuarios Totales</div>
+        <div class="stat-value" id="ao-users">${stats.users >= 1000 ? (stats.users/1000).toFixed(0)+'k' : stats.users}</div>
+        <div class="stat-sub"><span class="stat-up">↑</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--green)"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg></div>
+        <div class="stat-label">Ping WS</div>
+        <div class="stat-value" id="ao-ping">${stats.ping}<span style="font-size:14px;font-weight:400"> ms</span></div>
+        <div class="stat-sub"><span class="stat-pill green" id="ao-ping-pill">${stats.ping<100?'Excelente':'Normal'}</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="stat-label">Uptime</div>
+        <div class="stat-value" style="font-size:20px;margin-top:4px" id="ao-uptime">${stats.uptimeStr}</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Recursos del sistema</div>
+        <div class="prog-wrap" style="margin-bottom:16px">
+          <div class="prog-label"><span>USO DE RAM</span><span id="ao-ram-label">${ramPct}% (${stats.ram} MB / ${stats.ramTotal} MB)</span></div>
+          <div class="prog-bg"><div class="prog-fill" id="ao-ram-bar" style="width:${ramPct}%;background:${ramColor}"></div></div>
+        </div>
+        <div class="info-row"><span class="label">Versión Node.js</span><span class="val">${stats.nodeVersion}</span></div>
+        <div class="info-row"><span class="label">Comandos Registrados</span><span class="val" id="ao-cmds">${stats.commands}</span></div>
+        <div class="info-row"><span class="label">Canales Cacheados</span><span class="val" id="ao-channels">${stats.channels.toLocaleString()}</span></div>
+        <div class="info-row"><span class="label">Librería</span><span class="val">Discord.js v14</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Resumen global</div>
+        <div class="gsum-row">
+          <div class="gsum-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="gsum-info"><div class="gsum-title">Mensajes procesados</div><div class="gsum-sub">Desde el inicio</div></div>
+          <div class="gsum-val">—</div>
+        </div>
+        <div class="gsum-row">
+          <div class="gsum-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg></div>
+          <div class="gsum-info"><div class="gsum-title">Comandos ejecutados</div><div class="gsum-sub">Desde el inicio</div></div>
+          <div class="gsum-val">—</div>
+        </div>
+        <div class="gsum-row">
+          <div class="gsum-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div class="gsum-info"><div class="gsum-title">Acciones de Moderación</div><div class="gsum-sub">Automáticas y manuales</div></div>
+          <div class="gsum-val">—</div>
+        </div>
+        <div class="gsum-row">
+          <div class="gsum-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="gsum-info"><div class="gsum-title">Errores Registrados</div><div class="gsum-sub">Excepciones manejadas</div></div>
+          <div class="gsum-val" style="color:var(--red)">—</div>
+        </div>
+      </div>
+    </div>`;
+};
+
+// Patch only the live-updating DOM nodes — no full re-render, no flash
+function updateAdminStats(stats) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+  const ramPct   = Math.round(stats.ram / stats.ramTotal * 100);
+  const ramColor = ramPct>80?'var(--red)':ramPct>55?'var(--yellow)':'var(--accent)';
+
+  set('ao-guilds',   stats.guilds);
+  set('ao-users',    stats.users >= 1000 ? (stats.users/1000).toFixed(0)+'k' : stats.users);
+  set('ao-ping',     stats.ping + '<span style="font-size:14px;font-weight:400"> ms</span>');
+  set('ao-uptime',   stats.uptimeStr);
+  set('ao-cmds',     stats.commands);
+  set('ao-channels', stats.channels.toLocaleString());
+  set('ao-ram-label',`${ramPct}% (${stats.ram} MB / ${stats.ramTotal} MB)`);
+
+  const bar = document.getElementById('ao-ram-bar');
+  if (bar) { bar.style.width = ramPct + '%'; bar.style.background = ramColor; }
+
+  const pill = document.getElementById('ao-ping-pill');
+  if (pill) {
+    pill.textContent = stats.ping < 100 ? 'Excelente' : stats.ping < 200 ? 'Normal' : 'Alto';
+    pill.className   = 'stat-pill ' + (stats.ping < 100 ? 'green' : stats.ping < 200 ? '' : 'red');
+  }
+
+  // Pulse the "live" dot so the user can see it refreshed
+  const dot = document.getElementById('ao-dot');
+  if (dot) {
+    dot.style.background = 'var(--accent)';
+    setTimeout(() => { if (dot) dot.style.background = 'var(--green)'; }, 400);
+  }
+}
+
+PAGES['admin-overview_init'] = () => {
+  const INTERVAL_MS = 10_000; // 10 seconds
+  _autoRefreshTimer = setInterval(async () => {
+    try {
+      const stats = await api('/api/stats');
+      updateAdminStats(stats);
+    } catch {
+      // If the fetch fails (e.g. bot offline) just skip silently
+      const dot = document.getElementById('ao-dot');
+      if (dot) dot.style.background = 'var(--red)';
+    }
+  }, INTERVAL_MS);
+};
+
+/* ── ADMIN SERVERS ────────────────────────────────────────────────── */
+let _allServers = [];
+
+PAGES['admin-servers'] = async () => {
+  _allServers = await api('/api/servers');
+  _allServers.sort((a,b) => b.memberCount - a.memberCount);
+  const totalMembers = _allServers.reduce((s,g) => s + g.memberCount, 0);
+  return `
+    <div class="page-hdr"><h2>Servidores</h2><p>El bot está en <span>${_allServers.length}</span> servidores · <span>${totalMembers.toLocaleString()}</span> usuarios totales</p></div>
+    <div style="margin-bottom:12px">
+      <input class="input" id="srv-search" placeholder="🔍  Buscar por nombre o ID…" oninput="filterServers()" style="max-width:340px">
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table id="srv-table">
+        <thead><tr>
+          <th>Servidor</th>
+          <th>Miembros</th>
+          <th>Propietario</th>
+          <th>Prefijo</th>
+          <th>Módulos</th>
+          <th>ID</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="srv-tbody"></tbody>
+      </table></div>
+    </div>`;
+};
+PAGES['admin-servers_init'] = () => renderServerRows(_allServers);
+
+function serverRow(s) {
+  const icon = s.icon
+    ? `<img src="${s.icon}" style="width:28px;height:28px;border-radius:8px;flex-shrink:0" loading="lazy">`
+    : `<div style="width:28px;height:28px;border-radius:8px;background:var(--bg-card2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0">${esc(s.name.slice(0,2).toUpperCase())}</div>`;
+  const modules = [
+    s.levelingOn  ? '<span class="pill pill-blue"  style="font-size:9px;padding:1px 6px">Niveles</span>' : '',
+    s.hasWelcome  ? '<span class="pill pill-green" style="font-size:9px;padding:1px 6px">Bienvenida</span>' : '',
+    s.hasLogs     ? '<span class="pill pill-yellow"style="font-size:9px;padding:1px 6px">Logs</span>' : '',
+  ].filter(Boolean).join(' ') || '<span style="color:var(--muted2);font-size:11px">—</span>';
+
+  return `<tr>
+    <td><div style="display:flex;align-items:center;gap:9px">${icon}<strong style="color:var(--white)">${esc(s.name)}</strong></div></td>
+    <td style="color:var(--text)">${s.memberCount.toLocaleString()}</td>
+    <td style="color:var(--muted);font-size:11px">${esc(s.ownerName || s.ownerId)}</td>
+    <td><code style="font-size:11px;background:var(--bg-card2);padding:2px 6px;border-radius:4px;color:var(--text)">${esc(s.prefix)}</code></td>
+    <td style="white-space:nowrap">${modules}</td>
+    <td><code style="font-size:10px;color:var(--muted)">${s.id}</code></td>
+    <td><button class="btn btn-danger btn-sm" onclick="leaveServer('${s.id}','${esc(s.name).replace(/'/g,'&#39;')}')">Salir</button></td>
+  </tr>`;
+}
+
+function renderServerRows(list) {
+  const tbody = document.getElementById('srv-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = list.length
+    ? list.map(serverRow).join('')
+    : `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Sin resultados.</td></tr>`;
+}
+
+function filterServers() {
+  const q = document.getElementById('srv-search')?.value?.toLowerCase().trim() || '';
+  const filtered = q
+    ? _allServers.filter(s => s.name.toLowerCase().includes(q) || s.id.includes(q) || (s.ownerName||'').toLowerCase().includes(q))
+    : _allServers;
+  renderServerRows(filtered);
+}
+
+async function leaveServer(guildId, name) {
+  if (!confirm(`¿Salir del servidor "${name}"?\n\nEsto eliminará al bot de ese servidor inmediatamente.`)) return;
+  try {
+    await api(`/api/servers/${guildId}/leave`, { method: 'POST' });
+    showToast(`Bot salió de "${name}"`);
+    // Remove from local list and re-render without a full page reload
+    _allServers = _allServers.filter(s => s.id !== guildId);
+    renderServerRows(_allServers);
+    // Update the count in the subtitle
+    const hdr = document.querySelector('.page-hdr p');
+    if (hdr) {
+      const total = _allServers.reduce((s,g) => s + g.memberCount, 0);
+      hdr.innerHTML = `El bot está en <span>${_allServers.length}</span> servidores · <span>${total.toLocaleString()}</span> usuarios totales`;
+    }
+  } catch(e) { showToast(e.message, 'err'); }
+}
+
+/* ── ADMIN BLACKLIST ──────────────────────────────────────────────── */
+PAGES['admin-blacklist'] = async () => {
+  const list = await api('/api/blacklist');
+  const items = list.map(b => `
+    <div class="bl-item">
+      <div>
+        <div class="bl-label">Usuario bloqueado</div>
+        <div class="bl-id">${b.userID}</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removeBlacklist('${b.userID}')">Eliminar</button>
+    </div>`).join('') || `<div class="empty-state" style="padding:24px"><div style="font-size:32px">✅</div><p>La blacklist está vacía.</p></div>`;
+
+  return `
+    <div class="page-hdr"><h2>Blacklist Global</h2><p>${list.length} usuario(s) bloqueados en todos los servidores</p></div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">${ICONS.blacklist} Añadir usuario</div>
+      <div class="add-row">
+        <input class="input" id="bl-id" placeholder="ID del usuario (ej: 123456789012345678)">
+        <button class="btn btn-danger" onclick="addBlacklist()">Añadir</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">${ICONS.blacklist} Usuarios bloqueados</div>
+      ${items}
+    </div>`;
+};
+async function addBlacklist() {
+  const id = document.getElementById('bl-id')?.value?.trim();
+  if (!id) return;
+  try { await api('/api/blacklist',{method:'POST',body:{userId:id}}); showToast('Usuario añadido'); navigateTo('admin-blacklist'); }
+  catch(e) { showToast(e.message,'err'); }
+}
+async function removeBlacklist(userId) {
+  if (!confirm('¿Eliminar de la blacklist?')) return;
+  try { await api(`/api/blacklist/${userId}`,{method:'DELETE'}); showToast('Eliminado'); navigateTo('admin-blacklist'); }
+  catch(e) { showToast(e.message,'err'); }
+}
+
+/* ── ECONOMY ──────────────────────────────────────────────────────── */
+let EC_PAGE = 0, EC_DATA = [];
+const EC_PAGE_SIZE = 10;
+
+PAGES.economy = async () => {
+  if (!CURRENT_GUILD) return noGuildState('🪙');
+  EC_DATA = await api(`/api/guilds/${CURRENT_GUILD.id}/economy`);
+  EC_PAGE = 0;
+  const shop = await api(`/api/guilds/${CURRENT_GUILD.id}/shop`).catch(()=>[]);
+  const shopRows = shop.map(item => {
+    const roleName = item.roleId ? `<code style="font-size:10px">${esc(item.roleId)}</code>` : '—';
+    return `<tr>
+      <td style="color:var(--white);font-weight:600">${esc(item.itemName)}</td>
+      <td>${roleName}</td>
+      <td style="color:var(--yellow)">${item.price.toLocaleString()} 🪙</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteShopItem('${esc(item.itemName)}')">Eliminar</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">La tienda está vacía.</td></tr>`;
+  return `
+    <div class="page-hdr"><h2>Economía</h2><p>Monedas, tienda y ranking de riqueza de <span>${esc(CURRENT_GUILD.name)}</span></p></div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">${ICONS.economy} Top Riqueza · ${EC_DATA.length} usuarios</div>
+      <div id="ec-table-wrap"></div>
+      <div id="ec-pager"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">${ICONS.tickets} Tienda de roles</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Artículo</th><th>Rol ID</th><th>Precio</th><th>Acción</th></tr></thead>
+        <tbody>${shopRows}</tbody>
+      </table></div>
+    </div>`;
+};
+PAGES.economy_init = () => renderEcPage(0);
+
+function renderEcPage(page) {
+  EC_PAGE = page;
+  const total = Math.ceil(EC_DATA.length / EC_PAGE_SIZE);
+  const slice = EC_DATA.slice(page * EC_PAGE_SIZE, (page+1) * EC_PAGE_SIZE);
+  const wrap  = document.getElementById('ec-table-wrap');
+  const pagerEl = document.getElementById('ec-pager');
+  if (!wrap) return;
+  if (!slice.length) { wrap.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:12px">Sin datos de economía aún.</div>'; if(pagerEl)pagerEl.innerHTML=''; return; }
+  const rows = slice.map((u,i) => {
+    const globalIdx = page * EC_PAGE_SIZE + i;
+    const av = avHTML(u, true);
+    const medal = globalIdx===0?'🥇':globalIdx===1?'🥈':globalIdx===2?'🥉':`<span style="font-size:12px;font-weight:700;color:var(--muted)">${globalIdx+1}</span>`;
+    return `<tr>
+      <td style="width:40px;text-align:center">${medal}</td>
+      <td><div style="display:flex;align-items:center;gap:9px">${av}<div><div style="font-size:12px;font-weight:600;color:var(--white)">${esc(u.username)}</div><div style="font-size:10px;color:var(--muted)">ID: ${u.userId}</div></div></div></td>
+      <td style="color:var(--yellow);font-weight:600">${(u.balance||0).toLocaleString()} 🪙</td>
+      <td style="color:var(--muted)">${u.streak||0} 🔥</td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML = `<div class="table-wrap"><table><thead><tr><th>#</th><th>Usuario</th><th>Monedas</th><th>Racha</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  if (total<=1) { if(pagerEl)pagerEl.innerHTML=''; return; }
+  let ph = '<div class="pager">';
+  ph += `<button class="pager-btn" onclick="renderEcPage(${page-1})" ${page===0?'disabled':''}>‹</button>`;
+  for(let p=0;p<total;p++) {
+    if(total>7&&p>1&&p<total-1&&Math.abs(p-page)>1){if(p===2||p===total-2)ph+='<span style="color:var(--muted);padding:0 4px">…</span>';continue;}
+    ph+=`<button class="pager-btn ${p===page?'active':''}" onclick="renderEcPage(${p})">${p+1}</button>`;
+  }
+  ph+=`<button class="pager-btn" onclick="renderEcPage(${page+1})" ${page>=total-1?'disabled':''}>›</button></div>`;
+  if(pagerEl) pagerEl.innerHTML = ph;
+}
+
+async function deleteShopItem(name) {
+  if (!confirm(`¿Eliminar "${name}" de la tienda?`)) return;
+  try {
+    await api(`/api/guilds/${CURRENT_GUILD.id}/shop/${encodeURIComponent(name)}`,{method:'DELETE'});
+    showToast('Artículo eliminado');
+    navigateTo('economy');
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+/* ── TICKETS ──────────────────────────────────────────────────────── */
+PAGES.tickets = async () => {
+  if (!CURRENT_GUILD) return noGuildState('🎫');
+  const cfg = await api(`/api/guilds/${CURRENT_GUILD.id}/config`);
+  const tickets = await api(`/api/guilds/${CURRENT_GUILD.id}/tickets`).catch(()=>[]);
+  const open   = tickets.filter(t=>t.status==='open');
+  const closed = tickets.filter(t=>t.status==='closed');
+
+  const ticketRows = (list) => list.length ? list.map(t => {
+    const statusPill = t.status==='open'
+      ? '<span class="pill pill-green">Abierto</span>'
+      : '<span class="pill pill-red">Cerrado</span>';
+    const created = new Date(t.createdAt).toLocaleDateString('es-ES');
+    return `<tr>
+      <td style="font-weight:600;color:var(--white)">#${t.number}</td>
+      <td>${statusPill}</td>
+      <td><code style="font-size:10px;color:var(--muted)">${t.userId}</code></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${esc(t.reason)}</td>
+      <td style="color:var(--muted)">${created}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteTicket('${t._id}')">Eliminar</button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Sin tickets.</td></tr>`;
+
+  return `
+    <div class="page-hdr"><h2>Tickets de Soporte</h2><p>Gestiona los tickets de <span>${esc(CURRENT_GUILD.name)}</span></p></div>
+    <div class="grid2" style="margin-bottom:14px">
+      <div class="card">
+        <div class="card-title">${ICONS.tickets} Configurar tickets</div>
+        <div class="form-row">
+          <div class="form-label">Categoría de canales</div>
+          <select class="select" id="tc-cat">
+            <option value="">— Sin configurar —</option>
+            ${(GUILD_INFO?.channels||[]).map(c=>`<option value="${c.id}"${c.id===cfg.ticketCategory?' selected':''}>#${esc(c.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-label">Canal de logs</div>
+          <select class="select" id="tc-log">${channelOpts(cfg.ticketLogChannel)}</select>
+        </div>
+        <div class="form-row">
+          <div class="form-label">Rol de soporte</div>
+          <select class="select" id="tc-role">${roleOpts(cfg.supportRole)}</select>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary" onclick="saveTicketCfg()">💾 Guardar</button></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Estadísticas</div>
+        <div class="info-row"><span class="label">Total tickets</span><span class="val">${tickets.length}</span></div>
+        <div class="info-row"><span class="label">Abiertos</span><span class="val" style="color:var(--green)">${open.length}</span></div>
+        <div class="info-row"><span class="label">Cerrados</span><span class="val" style="color:var(--muted)">${closed.length}</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">${ICONS.tickets} Todos los tickets</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>Estado</th><th>Usuario ID</th><th>Motivo</th><th>Fecha</th><th>Acción</th></tr></thead>
+        <tbody>${ticketRows(tickets)}</tbody>
+      </table></div>
+    </div>`;
+};
+
+async function saveTicketCfg() {
+  try {
+    await patchConfig({
+      ticketCategory:   document.getElementById('tc-cat')?.value  || null,
+      ticketLogChannel: document.getElementById('tc-log')?.value  || null,
+      supportRole:      document.getElementById('tc-role')?.value || null,
+    });
+  } catch(e) { showToast(e.message,'err'); }
+}
+async function deleteTicket(id) {
+  if (!confirm('¿Eliminar este ticket del historial?')) return;
+  try { await api(`/api/guilds/${CURRENT_GUILD.id}/tickets/${id}`,{method:'DELETE'}); showToast('Ticket eliminado'); navigateTo('tickets'); }
+  catch(e) { showToast(e.message,'err'); }
+}
+
+/* ── AUTOMOD ──────────────────────────────────────────────────────── */
+PAGES.automod = async () => {
+  if (!CURRENT_GUILD) return noGuildState('🛡️');
+  const am = await api(`/api/guilds/${CURRENT_GUILD.id}/automod`).catch(()=>({}));
+  const toggleRow = (id, title, sub, checked) => `
+    <div class="toggle-row">
+      <div class="tl-info"><div class="tl">${title}</div><div class="ts">${sub}</div></div>
+      <label class="toggle"><input type="checkbox" id="${id}" ${checked?'checked':''}><span class="tslider"></span></label>
+    </div>`;
+  return `
+    <div class="page-hdr"><h2>Automoderación</h2><p>Filtros automáticos de contenido para <span>${esc(CURRENT_GUILD.name)}</span></p></div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">${ICONS.automod} Módulos</div>
+      ${toggleRow('am-enabled','🌐 Automod global','Activa o desactiva todo el sistema de automod.',am.enabled)}
+      ${toggleRow('am-links','🔗 Filtrar links externos','Elimina mensajes con URLs externas.',am.filterLinks)}
+      ${toggleRow('am-invites','📨 Filtrar invitaciones Discord','Elimina links de invitación de otros servidores.',am.filterInvites)}
+      ${toggleRow('am-spam','🔁 Detectar spam','Detecta y elimina mensajes repetidos (5+ en 8s).',am.filterSpam)}
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg> Acción al detectar infracción</div>
+      <div class="form-row">
+        <select class="select" id="am-action" style="max-width:300px">
+          <option value="delete" ${am.action==='delete'?'selected':''}>🗑️ Solo eliminar el mensaje</option>
+          <option value="warn"   ${am.action==='warn'  ?'selected':''}>⚠️ Eliminar + añadir warn</option>
+          <option value="timeout"${am.action==='timeout'?'selected':''}>⏱️ Eliminar + timeout 5 min</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Palabras prohibidas</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px" id="am-badwords-list">
+        ${(am.badWords||[]).length ? (am.badWords||[]).map(w=>`<span class="pill pill-red" style="cursor:pointer" title="Click para eliminar" onclick="removeBadWord('${esc(w)}')">${esc(w)} ✕</span>`).join('') : '<span style="font-size:12px;color:var(--muted)">Sin palabras configuradas.</span>'}
+      </div>
+      <div class="add-row">
+        <input class="input" id="am-bw-input" placeholder="Nueva palabra prohibida…" maxlength="50">
+        <button class="btn btn-danger" onclick="addBadWord()">Añadir</button>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="saveAutomod()">💾 Guardar cambios</button>
+    </div>`;
+};
+
+async function saveAutomod() {
+  try {
+    await api(`/api/guilds/${CURRENT_GUILD.id}/automod`,{method:'PATCH',body:{
+      enabled:        document.getElementById('am-enabled')?.checked ?? false,
+      filterLinks:    document.getElementById('am-links')?.checked   ?? false,
+      filterInvites:  document.getElementById('am-invites')?.checked ?? false,
+      filterSpam:     document.getElementById('am-spam')?.checked    ?? false,
+      action:         document.getElementById('am-action')?.value    ?? 'delete',
+    }});
+    showToast('Automod guardado');
+  } catch(e) { showToast(e.message,'err'); }
+}
+async function addBadWord() {
+  const w = document.getElementById('am-bw-input')?.value?.trim().toLowerCase();
+  if (!w) return;
+  try {
+    await api(`/api/guilds/${CURRENT_GUILD.id}/automod/badwords`,{method:'POST',body:{word:w}});
+    showToast('Palabra añadida');
+    navigateTo('automod');
+  } catch(e) { showToast(e.message,'err'); }
+}
+async function removeBadWord(word) {
+  if (!confirm(`¿Eliminar la palabra "${word}"?`)) return;
+  try {
+    await api(`/api/guilds/${CURRENT_GUILD.id}/automod/badwords/${encodeURIComponent(word)}`,{method:'DELETE'});
+    showToast('Palabra eliminada');
+    navigateTo('automod');
+  } catch(e) { showToast(e.message,'err'); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════════════════════
+boot();
+</script>
+</body>
+</html>

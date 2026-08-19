@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CatBot Dashboard — Mockup</title>
+<style>
+  /* ── Reset & Base ───────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:        #1a1b2e;
+    --surface:   #252641;
+    --surface2:  #2e3057;
+    --border:    #3a3d6b;
+    --accent:    #7289da;
+    --accent2:   #5865f2;
+    --green:     #43b581;
+    --red:       #f04747;
+    --yellow:    #faa61a;
+    --text:      #dcddde;
+    --muted:     #8b8fa8;
+    --white:     #ffffff;
+    --sidebar-w: 220px;
+    --header-h:  60px;
+  }
+  body { font-family: -apple-system,"Segoe UI",system-ui,sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+  a { color: var(--accent); text-decoration: none; }
+  button { cursor: pointer; font-family: inherit; }
+  input, select, textarea { font-family: inherit; }
+
+  /* ── Tab switcher (top of page) ─────────────────────────────────────── */
+  #tab-bar { display: flex; gap: 8px; padding: 16px 24px; background: #12131f; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .tab-btn { padding: 8px 20px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 13px; font-weight: 600; transition: all .15s; }
+  .tab-btn:hover { background: var(--surface2); color: var(--text); }
+  .tab-btn.active { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+  #tab-bar .label { color: var(--muted); font-size: 12px; align-self: center; margin-right: 4px; }
+
+  /* ── Shell layout ───────────────────────────────────────────────────── */
+  .shell { display: none; }
+  .shell.visible { display: flex; }
+  .shell { min-height: calc(100vh - 53px); }
+
+  /* ── Sidebar ────────────────────────────────────────────────────────── */
+  .sidebar { width: var(--sidebar-w); background: #12131f; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-logo { padding: 20px 18px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo .logo-circle { width: 36px; height: 36px; border-radius: 50%; background: var(--accent2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .sidebar-logo .logo-name { font-size: 15px; font-weight: 700; color: var(--white); }
+  .sidebar-logo .logo-sub  { font-size: 11px; color: var(--muted); }
+
+  .guild-select { margin: 12px; }
+  .guild-select select { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 6px; font-size: 13px; outline: none; }
+
+  .nav { padding: 8px 0; flex: 1; overflow-y: auto; }
+  .nav-section { padding: 12px 16px 4px; font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 16px; color: var(--muted); font-size: 13px; border-radius: 0; cursor: pointer; transition: all .1s; border-left: 3px solid transparent; }
+  .nav-item:hover { background: var(--surface); color: var(--text); }
+  .nav-item.active { background: var(--surface); color: var(--white); border-left-color: var(--accent2); }
+  .nav-item .icon { width: 18px; text-align: center; font-size: 15px; }
+  .nav-badge { margin-left: auto; background: var(--accent2); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+  .nav-badge.red { background: var(--red); }
+
+  .sidebar-user { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .avatar.sm { width: 24px; height: 24px; font-size: 10px; }
+  .sidebar-user .uname { font-size: 13px; font-weight: 600; color: var(--white); }
+  .sidebar-user .urole { font-size: 11px; color: var(--muted); }
+  .sidebar-user .logout { margin-left: auto; color: var(--muted); font-size: 18px; }
+
+  /* ── Main content ───────────────────────────────────────────────────── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { height: var(--header-h); background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; }
+  .topbar-title { font-size: 16px; font-weight: 700; color: var(--white); }
+  .topbar-sub   { font-size: 12px; color: var(--muted); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .badge-online { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--green); }
+  .badge-online::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+
+  .content { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── Cards / stat blocks ────────────────────────────────────────────── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card-title .ct-icon { font-size: 16px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
+  .stat-card .s-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .stat-card .s-value { font-size: 26px; font-weight: 800; color: var(--white); line-height: 1; }
+  .stat-card .s-sub   { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .stat-card .s-icon  { float: right; font-size: 28px; opacity: .3; margin-top: -4px; }
+
+  /* ── Grid helpers ───────────────────────────────────────────────────── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  /* ── Form controls ──────────────────────────────────────────────────── */
+  .form-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+  .form-row:last-child { margin-bottom: 0; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .form-hint  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .input, .select, .textarea {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 9px 12px; font-size: 13px; outline: none; width: 100%;
+    transition: border-color .15s;
+  }
+  .input:focus, .select:focus, .textarea:focus { border-color: var(--accent2); }
+  .textarea { resize: vertical; min-height: 80px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-info .tl { font-size: 13px; color: var(--text); font-weight: 600; }
+  .toggle-info .ts { font-size: 11px; color: var(--muted); }
+  .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: var(--surface2); border-radius: 22px; border: 1px solid var(--border); }
+  .slider::before { content:''; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; background: var(--muted); border-radius: 50%; transition: .2s; }
+  .toggle input:checked + .slider { background: var(--accent2); border-color: var(--accent2); }
+  .toggle input:checked + .slider::before { transform: translateX(18px); background: #fff; }
+
+  /* ── Buttons ────────────────────────────────────────────────────────── */
+  .btn { padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; border: none; transition: opacity .15s; }
+  .btn:hover { opacity: .85; }
+  .btn-primary { background: var(--accent2); color: #fff; }
+  .btn-danger  { background: var(--red);     color: #fff; }
+  .btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-green   { background: var(--green); color: #fff; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+  /* ── Table ──────────────────────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { padding: 8px 12px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); border-bottom: 1px solid var(--border); font-weight: 700; }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: rgba(255,255,255,.02); }
+
+  /* ── Tag / pill ─────────────────────────────────────────────────────── */
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .pill-green  { background: rgba(67,181,129,.15); color: var(--green); }
+  .pill-red    { background: rgba(240,71,71,.15); color: var(--red); }
+  .pill-yellow { background: rgba(250,166,26,.15); color: var(--yellow); }
+  .pill-blue   { background: rgba(114,137,218,.15); color: var(--accent); }
+
+  /* ── Level bar ──────────────────────────────────────────────────────── */
+  .level-bar-bg { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+  .level-bar-fill { height: 100%; border-radius: 3px; background: var(--accent2); }
+
+  /* ── Leaderboard row ────────────────────────────────────────────────── */
+  .lb-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank { width: 24px; font-size: 13px; font-weight: 800; color: var(--muted); text-align: center; }
+  .lb-rank.gold   { color: #ffd700; }
+  .lb-rank.silver { color: #c0c0c0; }
+  .lb-rank.bronze { color: #cd7f32; }
+  .lb-info { flex: 1; }
+  .lb-name  { font-size: 13px; font-weight: 600; color: var(--white); }
+  .lb-level { font-size: 11px; color: var(--muted); }
+  .lb-xp    { font-size: 12px; color: var(--accent); font-weight: 700; }
+
+  /* ── Activity log ───────────────────────────────────────────────────── */
+  .log-entry { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .log-entry:last-child { border-bottom: none; }
+  .log-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .log-text { font-size: 12px; color: var(--text); }
+  .log-time { font-size: 11px; color: var(--muted); }
+
+  /* ── Command list (admin view) ──────────────────────────────────────── */
+  .cmd-list { display: flex; flex-direction: column; gap: 2px; }
+  .cmd-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 6px; background: var(--bg); }
+  .cmd-item:hover { background: var(--surface2); }
+  .cmd-name  { font-size: 13px; font-weight: 600; color: var(--white); font-family: monospace; }
+  .cmd-desc  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .cmd-cat   { font-size: 10px; padding: 2px 7px; border-radius: 8px; background: var(--surface2); color: var(--muted); }
+
+  /* ── Welcome preview ────────────────────────────────────────────────── */
+  .welcome-preview { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; font-size: 13px; color: var(--text); margin-top: 10px; }
+  .welcome-preview .wp-tag { color: var(--accent2); font-weight: 600; }
+  .welcome-preview .wp-sys { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ── Blacklist item ─────────────────────────────────────────────────── */
+  .bl-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 6px; background: var(--bg); margin-bottom: 4px; }
+  .bl-id { font-family: monospace; font-size: 12px; color: var(--muted); }
+  .bl-user { font-size: 13px; font-weight: 600; color: var(--white); }
+
+  /* ── Page header ────────────────────────────────────────────────────── */
+  .page-header { margin-bottom: 6px; }
+  .page-header h2 { font-size: 20px; font-weight: 800; color: var(--white); }
+  .page-header p  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Mobile notice ──────────────────────────────────────────────────── */
+  .mobile-note { display: none; padding: 20px; text-align: center; color: var(--muted); font-size: 13px; }
+
+  /* ── Scrollbar ──────────────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ TAB BAR ══════════════════════════════ -->
+<div id="tab-bar">
+  <span class="label">Vista:</span>
+  <button class="tab-btn active" onclick="showTab('user')">👤 Usuario</button>
+  <button class="tab-btn" onclick="showTab('admin')">⚙️ Admin (Creador)</button>
+</div>
+
+<!-- ══════════════════════════ USER SHELL ═══════════════════════════════ -->
+<div id="shell-user" class="shell visible">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-circle">🐱</div>
+      <div>
+        <div class="logo-name">CatBot</div>
+        <div class="logo-sub">Dashboard</div>
+      </div>
+    </div>
+
+    <div class="guild-select">
+      <select class="select">
+        <option>🌟 Mi Servidor Principal</option>
+        <option>🎮 Servidor Gamer</option>
+        <option>🎨 Arte & Diseño</option>
+      </select>
+    </div>
+
+    <div class="nav">
+      <div class="nav-section">General</div>
+      <div class="nav-item active" onclick="showPage('user','overview')"><span class="icon">🏠</span>Resumen</div>
+      <div class="nav-item" onclick="showPage('user','config')"><span class="icon">⚙️</span>Configuración</div>
+
+      <div class="nav-section">Módulos</div>
+      <div class="nav-item" onclick="showPage('user','welcome')"><span class="icon">👋</span>Bienvenidas</div>
+      <div class="nav-item" onclick="showPage('user','levels')"><span class="icon">📈</span>Nivelación</div>
+      <div class="nav-item" onclick="showPage('user','moderation')"><span class="icon">🔨</span>Moderación</div>
+
+      <div class="nav-section">Info</div>
+      <div class="nav-item" onclick="showPage('user','commands')"><span class="icon">📋</span>Comandos</div>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="avatar">JB</div>
+      <div>
+        <div class="uname">jboviovallejo</div>
+        <div class="urole">Administrador</div>
+      </div>
+      <span class="logout" title="Cerrar sesión">⏏</span>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="u-page-title">Resumen del servidor</div>
+        <div class="topbar-sub">Mi Servidor Principal</div>
+      </div>
+      <div class="topbar-right">
+        <span class="badge-online">CatBot en línea</span>
+      </div>
+    </div>
+
+    <div class="content" id="u-content">
+
+      <!-- ── OVERVIEW PAGE ─────────────────────────────────────────────── -->
+      <div id="u-page-overview">
+        <div class="page-header">
+          <h2>Resumen</h2>
+          <p>Estado actual del bot en tu servidor</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="s-icon">👥</div>
+            <div class="s-label">Miembros</div>
+            <div class="s-value">1,284</div>
+            <div class="s-sub">+12 esta semana</div>
+          </div>
+          <div class="stat-card">
+            <div class="s-icon">💬</div>
+            <div class="s-label">Mensajes hoy</div>
+            <div class="s-value">3,471</div>
+            <div class="s-sub">Pico a las 20:00</div>
+          </div>
+          <div class="stat-card">
+            <div class="s-icon">⚠️</div>
+            <div class="s-label">Warns activos</div>
+            <div class="s-value">7</div>
+            <div class="s-sub">2 usuarios diferentes</div>
+          </div>
+          <div class="stat-card">
+            <div class="s-icon">📈</div>
+            <div class="s-label">Nivel promedio</div>
+            <div class="s-value">14</div>
+            <div class="s-sub">Top: Nivel 58</div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <!-- Leaderboard -->
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">🏆</span>Top Niveles</div>
+            <div class="lb-row">
+              <div class="lb-rank gold">1</div>
+              <div class="avatar sm">MX</div>
+              <div class="lb-info">
+                <div class="lb-name">MaxXx</div>
+                <div class="lb-level">Nivel 58</div>
+                <div class="level-bar-bg"><div class="level-bar-fill" style="width:92%"></div></div>
+              </div>
+              <div class="lb-xp">5,800 XP</div>
+            </div>
+            <div class="lb-row">
+              <div class="lb-rank silver">2</div>
+              <div class="avatar sm" style="background:#5865f2">NV</div>
+              <div class="lb-info">
+                <div class="lb-name">Nova</div>
+                <div class="lb-level">Nivel 45</div>
+                <div class="level-bar-bg"><div class="level-bar-fill" style="width:71%"></div></div>
+              </div>
+              <div class="lb-xp">4,500 XP</div>
+            </div>
+            <div class="lb-row">
+              <div class="lb-rank bronze">3</div>
+              <div class="avatar sm" style="background:#43b581">ZK</div>
+              <div class="lb-info">
+                <div class="lb-name">Zeke</div>
+                <div class="lb-level">Nivel 38</div>
+                <div class="level-bar-bg"><div class="level-bar-fill" style="width:60%"></div></div>
+              </div>
+              <div class="lb-xp">3,800 XP</div>
+            </div>
+            <div class="lb-row">
+              <div class="lb-rank">4</div>
+              <div class="avatar sm" style="background:#faa61a">LN</div>
+              <div class="lb-info">
+                <div class="lb-name">Luna</div>
+                <div class="lb-level">Nivel 29</div>
+                <div class="level-bar-bg"><div class="level-bar-fill" style="width:46%"></div></div>
+              </div>
+              <div class="lb-xp">2,900 XP</div>
+            </div>
+            <div class="lb-row">
+              <div class="lb-rank">5</div>
+              <div class="avatar sm" style="background:#f04747">RK</div>
+              <div class="lb-info">
+                <div class="lb-name">Riku</div>
+                <div class="lb-level">Nivel 22</div>
+                <div class="level-bar-bg"><div class="level-bar-fill" style="width:35%"></div></div>
+              </div>
+              <div class="lb-xp">2,200 XP</div>
+            </div>
+          </div>
+
+          <!-- Activity log -->
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">📝</span>Actividad reciente</div>
+            <div class="log-entry">
+              <div class="log-dot" style="background:var(--red)"></div>
+              <div>
+                <div class="log-text"><strong>MaxXx</strong> baneó a <strong>SpamUser99</strong></div>
+                <div class="log-time">hace 5 min · Razón: spam</div>
+              </div>
+            </div>
+            <div class="log-entry">
+              <div class="log-dot" style="background:var(--green)"></div>
+              <div>
+                <div class="log-text"><strong>Luna</strong> subió al nivel <strong>29</strong> 🎉</div>
+                <div class="log-time">hace 12 min</div>
+              </div>
+            </div>
+            <div class="log-entry">
+              <div class="log-dot" style="background:var(--yellow)"></div>
+              <div>
+                <div class="log-text"><strong>Nova</strong> recibió un warn de <strong>MaxXx</strong></div>
+                <div class="log-time">hace 1 hora · Razón: flood</div>
+              </div>
+            </div>
+            <div class="log-entry">
+              <div class="log-dot" style="background:var(--accent)"></div>
+              <div>
+                <div class="log-text"><strong>Pixel</strong> se unió al servidor</div>
+                <div class="log-time">hace 2 horas</div>
+              </div>
+            </div>
+            <div class="log-entry">
+              <div class="log-dot" style="background:var(--red)"></div>
+              <div>
+                <div class="log-text"><strong>Zeke</strong> fue muteado 10 minutos</div>
+                <div class="log-time">hace 3 horas</div>
+              </div>
+            </div>
+            <div class="log-entry">
+              <div class="log-dot" style="background:var(--accent)"></div>
+              <div>
+                <div class="log-text">Canal <strong>#general</strong> desbloqueado</div>
+                <div class="log-time">hace 5 horas</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modules status -->
+        <div class="card">
+          <div class="card-title"><span class="ct-icon">🔧</span>Estado de módulos</div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="tl">Sistema de nivelación</div>
+              <div class="ts">XP por mensajes con cooldown anti-spam</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="tl">Mensajes de bienvenida</div>
+              <div class="ts">Canal: #bienvenidas</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="tl">Logs de moderación</div>
+              <div class="ts">Canal: #mod-logs</div>
+            </div>
+            <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="tl">Auto-rol para nuevos miembros</div>
+              <div class="ts">Rol: @Nuevo Miembro</div>
+            </div>
+            <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CONFIG PAGE ───────────────────────────────────────────────── -->
+      <div id="u-page-config" style="display:none">
+        <div class="page-header">
+          <h2>Configuración General</h2>
+          <p>Ajustes básicos del bot en este servidor</p>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">⚙️</span>Ajustes básicos</div>
+            <div class="form-row">
+              <div class="form-label">Prefijo de comandos</div>
+              <input class="input" value="!" placeholder="Ej: ! ? $ ;">
+              <div class="form-hint">Prefijo para comandos de texto (por defecto: !)</div>
+            </div>
+            <div class="form-row">
+              <div class="form-label">Idioma</div>
+              <select class="select"><option selected>Español</option><option>English</option></select>
+            </div>
+            <div class="btn-row"><button class="btn btn-primary">Guardar cambios</button></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">📢</span>Canales</div>
+            <div class="form-row">
+              <div class="form-label">Canal de bienvenidas</div>
+              <select class="select">
+                <option selected>#bienvenidas</option><option>#general</option><option>#llegadas</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-label">Canal de logs de moderación</div>
+              <select class="select">
+                <option>— Sin configurar —</option><option selected>#mod-logs</option><option>#logs</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-label">Auto-rol para nuevos miembros</div>
+              <select class="select">
+                <option>— Sin configurar —</option><option>@Nuevo Miembro</option><option>@Verificado</option>
+              </select>
+            </div>
+            <div class="btn-row"><button class="btn btn-primary">Guardar cambios</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── WELCOME PAGE ──────────────────────────────────────────────── -->
+      <div id="u-page-welcome" style="display:none">
+        <div class="page-header">
+          <h2>Mensajes de Bienvenida</h2>
+          <p>Personaliza cómo se recibe a los nuevos miembros</p>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">✍️</span>Configurar mensaje</div>
+            <div class="form-row">
+              <div class="form-label">Canal de bienvenida</div>
+              <select class="select"><option selected>#bienvenidas</option><option>#general</option></select>
+            </div>
+            <div class="form-row">
+              <div class="form-label">Mensaje</div>
+              <textarea class="textarea">¡Bienvenido al servidor, {usuario}! 🎉 Somos una comunidad de gamers. Lee las reglas en #reglas.</textarea>
+              <div class="form-hint">Usa <strong>{usuario}</strong> para mencionar al nuevo miembro.</div>
+            </div>
+            <div class="form-row">
+              <div class="form-label">URL de imagen (opcional)</div>
+              <input class="input" placeholder="https://i.imgur.com/...">
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-ghost">Enviar prueba</button>
+              <button class="btn btn-primary">Guardar</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">👁️</span>Vista previa</div>
+            <div style="color:var(--muted);font-size:12px;margin-bottom:8px;">#bienvenidas</div>
+            <div class="welcome-preview">
+              <div>🐱 <strong style="color:var(--white)">CatBot</strong> <span style="color:var(--muted);font-size:11px">HOY a las 20:14</span></div>
+              <div style="margin-top:6px;">¡Bienvenido al servidor, <span class="wp-tag">@NuevoUsuario</span>! 🎉 Somos una comunidad de gamers. Lee las reglas en <span class="wp-tag">#reglas</span>.</div>
+              <div class="wp-sys" style="margin-top:8px;">▬ NuevoUsuario se unió al servidor.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LEVELS PAGE ───────────────────────────────────────────────── -->
+      <div id="u-page-levels" style="display:none">
+        <div class="page-header">
+          <h2>Sistema de Nivelación</h2>
+          <p>Gestiona el XP y rankings del servidor</p>
+        </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title"><span class="ct-icon">⚙️</span>Ajustes de nivelación</div>
+          <div class="toggle-row">
+            <div class="toggle-info"><div class="tl">Activar nivelación</div><div class="ts">Otorga XP por mensajes enviados</div></div>
+            <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+          </div>
+          <div class="form-row" style="margin-top:14px">
+            <div class="form-label">Canal de anuncio de nivel</div>
+            <select class="select"><option>Mismo canal del mensaje</option><option selected>#niveles</option></select>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-danger btn-sm" onclick="if(confirm('¿Resetear todos los niveles?')){}">Resetear todos los niveles</button>
+            <button class="btn btn-primary">Guardar</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="ct-icon">🏆</span>Leaderboard completo</div>
+          <table>
+            <thead><tr><th>#</th><th>Usuario</th><th>Nivel</th><th>Mensajes</th><th>Progreso</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><strong style="color:#ffd700">1</strong></td><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar sm">MX</div>MaxXx</div></td><td><span class="pill pill-blue">58</span></td><td>5,800</td><td><div class="level-bar-bg" style="width:120px"><div class="level-bar-fill" style="width:92%"></div></div></td><td></td></tr>
+              <tr><td><strong style="color:#c0c0c0">2</strong></td><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar sm" style="background:#5865f2">NV</div>Nova</div></td><td><span class="pill pill-blue">45</span></td><td>4,500</td><td><div class="level-bar-bg" style="width:120px"><div class="level-bar-fill" style="width:71%"></div></div></td><td></td></tr>
+              <tr><td><strong style="color:#cd7f32">3</strong></td><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar sm" style="background:#43b581">ZK</div>Zeke</div></td><td><span class="pill pill-blue">38</span></td><td>3,800</td><td><div class="level-bar-bg" style="width:120px"><div class="level-bar-fill" style="width:60%"></div></div></td><td><button class="btn btn-ghost btn-sm">Reset</button></td></tr>
+              <tr><td>4</td><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar sm" style="background:#faa61a">LN</div>Luna</div></td><td><span class="pill pill-blue">29</span></td><td>2,900</td><td><div class="level-bar-bg" style="width:120px"><div class="level-bar-fill" style="width:46%"></div></div></td><td><button class="btn btn-ghost btn-sm">Reset</button></td></tr>
+              <tr><td>5</td><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar sm" style="background:#f04747">RK</div>Riku</div></td><td><span class="pill pill-blue">22</span></td><td>2,200</td><td><div class="level-bar-bg" style="width:120px"><div class="level-bar-fill" style="width:35%"></div></div></td><td><button class="btn btn-ghost btn-sm">Reset</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── MODERATION PAGE ───────────────────────────────────────────── -->
+      <div id="u-page-moderation" style="display:none">
+        <div class="page-header">
+          <h2>Moderación</h2>
+          <p>Gestiona warns y acciones de moderación</p>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="ct-icon">⚠️</span>Warns activos</div>
+          <table>
+            <thead><tr><th>Usuario</th><th>#</th><th>Último warn</th><th>Razón</th><th>Moderador</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar sm">NV</div>Nova</div></td>
+                <td><span class="pill pill-yellow">3 warns</span></td>
+                <td style="color:var(--muted)">hace 1 hora</td>
+                <td>Flood en #general</td>
+                <td style="color:var(--muted)">MaxXx</td>
+                <td><button class="btn btn-ghost btn-sm">Ver</button> <button class="btn btn-danger btn-sm">Limpiar</button></td>
+              </tr>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar sm" style="background:#f04747">RK</div>Riku</div></td>
+                <td><span class="pill pill-red">4 warns</span></td>
+                <td style="color:var(--muted)">hace 3 horas</td>
+                <td>Spam de imágenes</td>
+                <td style="color:var(--muted)">MaxXx</td>
+                <td><button class="btn btn-ghost btn-sm">Ver</button> <button class="btn btn-danger btn-sm">Limpiar</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── COMMANDS PAGE ─────────────────────────────────────────────── -->
+      <div id="u-page-commands" style="display:none">
+        <div class="page-header">
+          <h2>Lista de comandos</h2>
+          <p>Todos los comandos disponibles en CatBot (46 total)</p>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">🎮</span>Diversión (11)</div>
+            <div class="cmd-list">
+              <div class="cmd-item"><div><div class="cmd-name">/8ball</div><div class="cmd-desc">Bola mágica</div></div><span class="cmd-cat">fun</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/bj</div><div class="cmd-desc">Blackjack</div></div><span class="cmd-cat">fun</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/coin</div><div class="cmd-desc">Lanza una moneda</div></div><span class="cmd-cat">fun</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/howgay</div><div class="cmd-desc">% de gaycidad</div></div><span class="cmd-cat">fun</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/love</div><div class="cmd-desc">Compatibilidad</div></div><span class="cmd-cat">fun</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/minigame</div><div class="cmd-desc">Adivina el número</div></div><span class="cmd-cat">fun</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/pokemon</div><div class="cmd-desc">Pokémon aleatorio</div></div><span class="cmd-cat">fun</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">🔧</span>Utilidad (13)</div>
+            <div class="cmd-list">
+              <div class="cmd-item"><div><div class="cmd-name">/ping</div><div class="cmd-desc">Latencia del bot</div></div><span class="cmd-cat">utility</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/botinfo</div><div class="cmd-desc">Info del bot</div></div><span class="cmd-cat">utility</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/avatar</div><div class="cmd-desc">Ver avatar</div></div><span class="cmd-cat">utility</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/userinfo</div><div class="cmd-desc">Info de usuario</div></div><span class="cmd-cat">utility</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/math</div><div class="cmd-desc">Calculadora</div></div><span class="cmd-cat">utility</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/poll</div><div class="cmd-desc">Crear encuesta</div></div><span class="cmd-cat">utility</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/help</div><div class="cmd-desc">Menú de ayuda</div></div><span class="cmd-cat">utility</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /shell-user -->
+
+
+<!-- ══════════════════════════ ADMIN SHELL ══════════════════════════════ -->
+<div id="shell-admin" class="shell">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-circle">🐱</div>
+      <div>
+        <div class="logo-name">CatBot</div>
+        <div class="logo-sub">Panel Admin</div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <div class="nav-section">Bot Global</div>
+      <div class="nav-item active" onclick="showPage('admin','overview')"><span class="icon">📊</span>Estadísticas globales</div>
+      <div class="nav-item" onclick="showPage('admin','servers')"><span class="icon">🌐</span>Servidores <span class="nav-badge">127</span></div>
+      <div class="nav-item" onclick="showPage('admin','blacklist')"><span class="icon">🚫</span>Blacklist <span class="nav-badge red">4</span></div>
+
+      <div class="nav-section">Herramientas</div>
+      <div class="nav-item" onclick="showPage('admin','commands-mgr')"><span class="icon">📋</span>Comandos</div>
+      <div class="nav-item" onclick="showPage('admin','logs')"><span class="icon">🗒️</span>Logs del sistema</div>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="avatar" style="background:var(--red)">JB</div>
+      <div>
+        <div class="uname">jboviovallejo</div>
+        <div class="urole" style="color:var(--red)">Creador del bot</div>
+      </div>
+      <span class="logout" title="Cerrar sesión">⏏</span>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="a-page-title">Estadísticas globales</div>
+        <div class="topbar-sub">Vista del creador del bot</div>
+      </div>
+      <div class="topbar-right">
+        <span class="badge-online">CatBot en línea</span>
+        <span style="font-size:11px;color:var(--muted)">Uptime: 4d 12h 8m</span>
+      </div>
+    </div>
+
+    <div class="content" id="a-content">
+
+      <!-- ── ADMIN OVERVIEW ────────────────────────────────────────────── -->
+      <div id="a-page-overview">
+        <div class="page-header"><h2>Estadísticas globales</h2><p>Resumen del bot en todos los servidores</p></div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="s-icon">🌐</div>
+            <div class="s-label">Servidores</div>
+            <div class="s-value">127</div>
+            <div class="s-sub">+3 esta semana</div>
+          </div>
+          <div class="stat-card">
+            <div class="s-icon">👥</div>
+            <div class="s-label">Usuarios totales</div>
+            <div class="s-value">48,291</div>
+            <div class="s-sub">Todos los guilds</div>
+          </div>
+          <div class="stat-card">
+            <div class="s-icon">⚡</div>
+            <div class="s-label">Comandos hoy</div>
+            <div class="s-value">9,847</div>
+            <div class="s-sub">Pico: 412/hora</div>
+          </div>
+          <div class="stat-card">
+            <div class="s-icon">🚫</div>
+            <div class="s-label">Blacklist</div>
+            <div class="s-value">4</div>
+            <div class="s-sub">Usuarios bloqueados</div>
+          </div>
+        </div>
+
+        <div class="grid3">
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">🖥️</span>Sistema</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--muted)">CPU</span><span style="font-size:12px;color:var(--text)">2.4%</span></div>
+                <div class="level-bar-bg"><div class="level-bar-fill" style="width:2.4%;background:var(--green)"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--muted)">RAM</span><span style="font-size:12px;color:var(--text)">342 MB / 1024 MB</span></div>
+                <div class="level-bar-bg"><div class="level-bar-fill" style="width:33%;background:var(--yellow)"></div></div>
+              </div>
+              <div style="margin-top:4px">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Info</div>
+                <div style="font-size:12px;color:var(--text)">Node.js v22.13 · discord.js v14<br>Ping WS: <strong>42ms</strong> · Uptime: <strong>4d 12h</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">📈</span>Comandos más usados</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:monospace;font-size:12px">/ping</span>
+                <div style="display:flex;align-items:center;gap:8px"><div class="level-bar-bg" style="width:80px"><div class="level-bar-fill" style="width:100%"></div></div><span style="font-size:11px;color:var(--muted)">1,842</span></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:monospace;font-size:12px">/bj</span>
+                <div style="display:flex;align-items:center;gap:8px"><div class="level-bar-bg" style="width:80px"><div class="level-bar-fill" style="width:78%"></div></div><span style="font-size:11px;color:var(--muted)">1,437</span></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:monospace;font-size:12px">/avatar</span>
+                <div style="display:flex;align-items:center;gap:8px"><div class="level-bar-bg" style="width:80px"><div class="level-bar-fill" style="width:60%"></div></div><span style="font-size:11px;color:var(--muted)">1,108</span></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:monospace;font-size:12px">/8ball</span>
+                <div style="display:flex;align-items:center;gap:8px"><div class="level-bar-bg" style="width:80px"><div class="level-bar-fill" style="width:48%"></div></div><span style="font-size:11px;color:var(--muted)">887</span></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:monospace;font-size:12px">/help</span>
+                <div style="display:flex;align-items:center;gap:8px"><div class="level-bar-bg" style="width:80px"><div class="level-bar-fill" style="width:38%"></div></div><span style="font-size:11px;color:var(--muted)">702</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">🌐</span>Servidores recientes</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="log-entry" style="padding:6px 0">
+                <div class="log-dot" style="background:var(--green)"></div>
+                <div><div class="log-text"><strong>Gamer Zone</strong> añadió el bot</div><div class="log-time">Hace 2h · 4,821 miembros</div></div>
+              </div>
+              <div class="log-entry" style="padding:6px 0">
+                <div class="log-dot" style="background:var(--green)"></div>
+                <div><div class="log-text"><strong>Anime World</strong> añadió el bot</div><div class="log-time">Hace 6h · 12,003 miembros</div></div>
+              </div>
+              <div class="log-entry" style="padding:6px 0">
+                <div class="log-dot" style="background:var(--red)"></div>
+                <div><div class="log-text"><strong>Old Server</strong> removió el bot</div><div class="log-time">Hace 1d · 102 miembros</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SERVERS PAGE ──────────────────────────────────────────────── -->
+      <div id="a-page-servers" style="display:none">
+        <div class="page-header"><h2>Servidores</h2><p>Todos los servidores donde está CatBot</p></div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+            <input class="input" placeholder="Buscar servidor..." style="max-width:280px">
+            <button class="btn btn-ghost btn-sm">Filtrar</button>
+          </div>
+          <table>
+            <thead><tr><th>Servidor</th><th>Miembros</th><th>Prefijo</th><th>Nivelación</th><th>Warns</th><th>Acciones</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar sm" style="background:#5865f2">GZ</div><strong>Gamer Zone</strong></div></td>
+                <td>4,821</td><td><code>!</code></td>
+                <td><span class="pill pill-green">ON</span></td><td>12</td>
+                <td><button class="btn btn-ghost btn-sm">Ver config</button> <button class="btn btn-danger btn-sm">Salir</button></td>
+              </tr>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar sm" style="background:#faa61a">AW</div><strong>Anime World</strong></div></td>
+                <td>12,003</td><td><code>?</code></td>
+                <td><span class="pill pill-green">ON</span></td><td>3</td>
+                <td><button class="btn btn-ghost btn-sm">Ver config</button> <button class="btn btn-danger btn-sm">Salir</button></td>
+              </tr>
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar sm" style="background:#43b581">CS</div><strong>Coding Space</strong></div></td>
+                <td>2,149</td><td><code>!</code></td>
+                <td><span class="pill pill-red">OFF</span></td><td>0</td>
+                <td><button class="btn btn-ghost btn-sm">Ver config</button> <button class="btn btn-danger btn-sm">Salir</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── BLACKLIST PAGE ────────────────────────────────────────────── -->
+      <div id="a-page-blacklist" style="display:none">
+        <div class="page-header"><h2>Blacklist Global</h2><p>Usuarios bloqueados en todos los servidores</p></div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+            <input class="input" placeholder="ID del usuario a bloquear..." style="max-width:260px">
+            <button class="btn btn-danger">+ Añadir a blacklist</button>
+          </div>
+          <div class="bl-item">
+            <div style="display:flex;align-items:center;gap:10px"><div class="avatar sm" style="background:var(--red)">SP</div><div><div class="bl-user">SpamUser99</div><div class="bl-id">ID: 123456789012345678</div></div></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--muted)">Bloqueado hace 3 días</span><button class="btn btn-ghost btn-sm">Eliminar</button></div>
+          </div>
+          <div class="bl-item">
+            <div style="display:flex;align-items:center;gap:10px"><div class="avatar sm" style="background:var(--red)">RB</div><div><div class="bl-user">RaidBot_x</div><div class="bl-id">ID: 987654321098765432</div></div></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--muted)">Bloqueado hace 1 semana</span><button class="btn btn-ghost btn-sm">Eliminar</button></div>
+          </div>
+          <div class="bl-item">
+            <div style="display:flex;align-items:center;gap:10px"><div class="avatar sm" style="background:var(--red)">??</div><div><div class="bl-user">Usuario desconocido</div><div class="bl-id">ID: 111222333444555666</div></div></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--muted)">Bloqueado hace 2 semanas</span><button class="btn btn-ghost btn-sm">Eliminar</button></div>
+          </div>
+          <div class="bl-item">
+            <div style="display:flex;align-items:center;gap:10px"><div class="avatar sm" style="background:var(--red)">SC</div><div><div class="bl-user">Scammer2024</div><div class="bl-id">ID: 444555666777888999</div></div></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:var(--muted)">Bloqueado hace 1 mes</span><button class="btn btn-ghost btn-sm">Eliminar</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── COMMANDS MGR PAGE ─────────────────────────────────────────── -->
+      <div id="a-page-commands-mgr" style="display:none">
+        <div class="page-header"><h2>Gestión de Comandos</h2><p>46 comandos activos · 5 categorías</p></div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">🎮</span>fun (11)</div>
+            <div class="cmd-list">
+              <div class="cmd-item"><div><div class="cmd-name">/8ball</div><div class="cmd-desc">Bola mágica — cooldown 3s</div></div><span class="pill pill-green">ON</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/bj</div><div class="cmd-desc">Blackjack — cooldown 10s</div></div><span class="pill pill-green">ON</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/waifu</div><div class="cmd-desc">Solo NSFW — cooldown 5s</div></div><span class="pill pill-yellow">NSFW</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/pokemon</div><div class="cmd-desc">API externa — cooldown 5s</div></div><span class="pill pill-green">ON</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">🔨</span>moderation (7)</div>
+            <div class="cmd-list">
+              <div class="cmd-item"><div><div class="cmd-name">/ban</div><div class="cmd-desc">Requiere BanMembers — cooldown 5s</div></div><span class="pill pill-green">ON</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/kick</div><div class="cmd-desc">Requiere KickMembers — cooldown 5s</div></div><span class="pill pill-green">ON</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/mute</div><div class="cmd-desc">Requiere rol Muted — cooldown 5s</div></div><span class="pill pill-green">ON</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/warn</div><div class="cmd-desc">Requiere ModerateMembers</div></div><span class="pill pill-green">ON</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">⚙️</span>admin (8) — solo creador</div>
+            <div class="cmd-list">
+              <div class="cmd-item"><div><div class="cmd-name">/blacklist</div><div class="cmd-desc">add / remove / list — ownerOnly</div></div><span class="pill pill-red">OWNER</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/leave</div><div class="cmd-desc">Salir de un servidor — ownerOnly</div></div><span class="pill pill-red">OWNER</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/setprefix</div><div class="cmd-desc">Requiere Administrator</div></div><span class="pill pill-blue">ADMIN</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/setelevel</div><div class="cmd-desc">Requiere Administrator</div></div><span class="pill pill-blue">ADMIN</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="ct-icon">🤗</span>activities (7)</div>
+            <div class="cmd-list">
+              <div class="cmd-item"><div><div class="cmd-name">/hug /kiss /cuddle</div><div class="cmd-desc">GIFs de nekos.life — cooldown 3s</div></div><span class="pill pill-green">ON</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/pat /poke /slap</div><div class="cmd-desc">GIFs de nekos.life — cooldown 3s</div></div><span class="pill pill-green">ON</span></div>
+              <div class="cmd-item"><div><div class="cmd-name">/tickle</div><div class="cmd-desc">GIFs de nekos.life — cooldown 3s</div></div><span class="pill pill-green">ON</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LOGS PAGE ─────────────────────────────────────────────────── -->
+      <div id="a-page-logs" style="display:none">
+        <div class="page-header"><h2>Logs del sistema</h2><p>Últimos eventos del bot</p></div>
+        <div class="card">
+          <div style="font-family:monospace;font-size:12px;color:var(--text);line-height:2;background:var(--bg);padding:16px;border-radius:8px;overflow-x:auto">
+            <div><span style="color:var(--muted)">[08:26:44]</span> <span style="color:var(--green)">INFO</span>  ✅ Conectado a MongoDB</div>
+            <div><span style="color:var(--muted)">[08:26:44]</span> <span style="color:var(--green)">INFO</span>  📦 46 comandos cargados | 46 con slash</div>
+            <div><span style="color:var(--muted)">[08:26:45]</span> <span style="color:var(--green)">INFO</span>  🤖 Bot listo como CatBot#1234 | 127 servidor(es)</div>
+            <div><span style="color:var(--muted)">[08:26:45]</span> <span style="color:var(--green)">INFO</span>  ✅ 46 comandos registrados en 127/127 servidores.</div>
+            <div><span style="color:var(--muted)">[08:31:12]</span> <span style="color:var(--yellow)">WARN</span>  Canal de startup no encontrado, ignorando.</div>
+            <div><span style="color:var(--muted)">[09:04:33]</span> <span style="color:var(--red)">ERROR</span> Error ejecutando el comando "waifu": canal no es NSFW</div>
+            <div><span style="color:var(--muted)">[11:22:08]</span> <span style="color:var(--green)">INFO</span>  Bot añadido al servidor: Gamer Zone (ID: 90712...)</div>
+            <div><span style="color:var(--muted)">[14:18:55]</span> <span style="color:var(--green)">INFO</span>  Bot añadido al servidor: Anime World (ID: 10841...)</div>
+            <div><span style="color:var(--muted)">[16:40:01]</span> <span style="color:var(--red)">ERROR</span> Unhandled Rejection: DiscordAPIError [50013]: Missing Permissions</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /shell-admin -->
+
+<script>
+  // Tab switching between User and Admin views
+  function showTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='user')||(i===1&&tab==='admin')));
+    document.getElementById('shell-user').classList.toggle('visible', tab === 'user');
+    document.getElementById('shell-admin').classList.toggle('visible', tab === 'admin');
+  }
+
+  // Page nav within each shell
+  const pageTitles = {
+    'user': {
+      overview: 'Resumen del servidor', config: 'Configuración General',
+      welcome: 'Mensajes de Bienvenida', levels: 'Sistema de Nivelación',
+      moderation: 'Moderación', commands: 'Lista de Comandos'
+    },
+    'admin': {
+      overview: 'Estadísticas globales', servers: 'Servidores',
+      blacklist: 'Blacklist Global', 'commands-mgr': 'Gestión de Comandos', logs: 'Logs del Sistema'
+    }
+  };
+
+  function showPage(shell, page) {
+    // Hide all pages in shell
+    document.querySelectorAll(`#shell-${shell} [id^="${shell[0]}-page-"]`).forEach(el => el.style.display = 'none');
+    // Show target page
+    const el = document.getElementById(`${shell[0]}-page-${page}`);
+    if (el) el.style.display = '';
+    // Update active nav item
+    document.querySelectorAll(`#shell-${shell} .nav-item`).forEach(n => n.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    // Update topbar title
+    const titleEl = document.getElementById(`${shell[0]}-page-title`);
+    if (titleEl && pageTitles[shell][page]) titleEl.textContent = pageTitles[shell][page];
+  }
+</script>
+
+<footer style="text-align:center;padding:16px;font-size:11px;color:#57606a;border-top:1px solid #e5e7eb;background:#fff">
+  Made with IBM Bob
+</footer>
+</body>
+</html>
