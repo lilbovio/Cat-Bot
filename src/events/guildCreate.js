@@ -1,4 +1,4 @@
-const { Events, EmbedBuilder } = require('discord.js');
+const { Events, EmbedBuilder, REST, Routes } = require('discord.js');
 const config = require('../../config');
 const logger = require('../utils/logger');
 
@@ -45,6 +45,21 @@ module.exports = {
             } catch (err) {
                 logger.warn('Error al enviar el mensaje al canal predeterminado:', err.message);
             }
+        }
+
+        // Register slash commands for this new guild
+        try {
+            const slashCommands = [...client.slashCommands.values()]
+                .filter((c) => c.data)
+                .map((c) => c.data.toJSON());
+            const rest = new REST({ version: '10' }).setToken(config.token);
+            await rest.put(
+                Routes.applicationGuildCommands(config.clientId, guild.id),
+                { body: slashCommands }
+            );
+            logger.info(`✅ Comandos slash registrados en nuevo servidor: ${guild.name}`);
+        } catch (err) {
+            logger.warn('Error registrando slash en nuevo servidor:', err.message);
         }
     },
 };

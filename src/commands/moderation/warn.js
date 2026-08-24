@@ -73,7 +73,7 @@ module.exports = {
                         { name: 'Total de warns', value: `**${total}**`,  inline: true },
                         { name: 'Razón',          value: razon,           inline: false },
                     )
-                    .setFooter({ text: total >= 3 ? '⚠️ Este usuario acumula muchos warns.' : '' })],
+                    .setFooter(total >= 3 ? { text: '⚠️ Este usuario acumula muchos warns.' } : null)],
                 components: [],
             });
 
