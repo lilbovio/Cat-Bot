@@ -423,6 +423,8 @@ async function boot() {
     $('#sb-uname').textContent = state.me.username;
     $('#sb-usub').textContent = state.me.isOwner ? 'Propietario del bot' : 'Administrador';
     if (state.me.isOwner) $('#sb-role').hidden = false;
+    $('#sb-mode').textContent = state.me.isOwner ? 'Panel Admin' : 'Dashboard de Servidor';
+    $('#owner-badge').hidden = !state.me.isOwner;
 
     await loadGuilds();
     renderNav();

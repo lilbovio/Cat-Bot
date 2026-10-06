@@ -46,6 +46,12 @@ app.use(passport.session());
 app.use('/auth', authRouter);
 app.use('/api',  apiRouter);
 
+// Unknown API routes must 404 as JSON; otherwise the SPA catch-all below answers
+// them with index.html and a 200, and the client's res.json() blows up.
+app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'Not found' });
+});
+
 // ── Static frontend (dashboard/public/) ──────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
