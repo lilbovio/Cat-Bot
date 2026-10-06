@@ -1,5 +1,7 @@
 const express     = require('express');
 const axios       = require('axios');
+const mongoose    = require('mongoose');
+const { PermissionsBitField, version: djsVersion } = require('discord.js');
 const router      = express.Router();
 const requireAuth = require('../middleware/requireAuth');
 const GuildConfig = require('../../models/GuildConfig');
@@ -75,6 +77,11 @@ router.get('/guilds/:guildId/info', requireAuth, requireGuildAccess, async (req,
         .map(c => ({ id: c.id, name: c.name }))
         .sort((a, b) => a.name.localeCompare(b.name));
 
+    const categories = botGuild.channels.cache
+        .filter(c => c.type === 4)
+        .map(c => ({ id: c.id, name: c.name }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
     const roles = botGuild.roles.cache
         .filter(r => r.id !== botGuild.id && !r.managed)
         .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
@@ -86,6 +93,7 @@ router.get('/guilds/:guildId/info', requireAuth, requireGuildAccess, async (req,
         icon:        botGuild.iconURL({ dynamic: true }),
         memberCount: botGuild.memberCount,
         channels,
+        categories,
         roles,
     });
 });
@@ -101,6 +109,9 @@ router.get('/guilds/:guildId/config', requireAuth, requireGuildAccess, async (re
         logsChannel:     cfg.logsChannel     ?? null,
         autoRole:        cfg.autoRole        ?? null,
         levelingEnabled: cfg.levelingEnabled ?? true,
+        ticketCategory:   cfg.ticketCategory   ?? null,
+        ticketLogChannel: cfg.ticketLogChannel ?? null,
+        supportRole:      cfg.supportRole      ?? null,
     });
 });
 
@@ -114,8 +125,28 @@ router.patch('/guilds/:guildId/config', requireAuth, requireGuildAccess, async (
     for (const key of allowed) {
         if (key in req.body) update[key] = req.body[key];
     }
-    if (update.prefix && (update.prefix.length < 1 || update.prefix.length > 5)) {
-        return res.status(400).json({ error: 'El prefijo debe tener entre 1 y 5 caracteres' });
+    if ('prefix' in update) {
+        if (typeof update.prefix !== 'string' || !update.prefix.trim() || update.prefix.length > 5) {
+            return res.status(400).json({ error: 'El prefijo debe tener entre 1 y 5 caracteres' });
+        }
+        if (/\s/.test(update.prefix)) {
+            return res.status(400).json({ error: 'El prefijo no puede contener espacios' });
+        }
+    }
+    if ('welcomeMessage' in update && typeof update.welcomeMessage === 'string' && update.welcomeMessage.length > 2000) {
+        return res.status(400).json({ error: 'El mensaje no puede superar los 2000 caracteres (límite de Discord)' });
+    }
+    // Channel/role fields must be snowflakes (or null) so the dashboard cannot store junk
+    for (const key of ['welcomeChannel','logsChannel','autoRole','ticketCategory','ticketLogChannel','supportRole']) {
+        if (key in update && update[key] !== null) {
+            const value = update[key];
+            if (typeof value !== 'string' || !/^\d{15,25}$/.test(value)) {
+                return res.status(400).json({ error: `Valor inválido para ${key}` });
+            }
+        }
+    }
+    if ('levelingEnabled' in update && typeof update.levelingEnabled !== 'boolean') {
+        return res.status(400).json({ error: 'levelingEnabled debe ser booleano' });
     }
     const cfg = await GuildConfig.findOneAndUpdate(
         { guildId: req.params.guildId },
@@ -279,10 +310,22 @@ router.get('/guilds/:guildId/automod', requireAuth, requireGuildAccess, async (r
 
 // ── PATCH /api/guilds/:guildId/automod ────────────────────────────────────────
 router.patch('/guilds/:guildId/automod', requireAuth, requireGuildAccess, async (req, res) => {
-    const allowed = ['enabled','filterLinks','filterInvites','filterSpam','action'];
+    const allowed = ['enabled','filterLinks','filterInvites','filterSpam','action','exemptChannels','exemptRoles'];
     const update  = {};
     for (const key of allowed) {
-        if (key in req.body) update[`automod.${key}`] = req.body[key];
+        if (!(key in req.body)) continue;
+        if (key === 'action') {
+            if (!['delete','warn','timeout'].includes(req.body[key])) {
+                return res.status(400).json({ error: 'Acción de automod inválida' });
+            }
+        } else if (key.startsWith('exempt')) {
+            if (!Array.isArray(req.body[key]) || req.body[key].some(v => typeof v !== 'string' || !/^\d{15,25}$/.test(v))) {
+                return res.status(400).json({ error: `Lista inválida para ${key}` });
+            }
+        } else if (typeof req.body[key] !== 'boolean') {
+            return res.status(400).json({ error: `${key} debe ser booleano` });
+        }
+        update[`automod.${key}`] = req.body[key];
     }
     await GuildConfig.findOneAndUpdate(
         { guildId: req.params.guildId },
@@ -298,6 +341,9 @@ router.post('/guilds/:guildId/automod/badwords', requireAuth, requireGuildAccess
     if (!word || typeof word !== 'string' || word.trim().length === 0) {
         return res.status(400).json({ error: 'Palabra inválida' });
     }
+    if (word.trim().length > 50) {
+        return res.status(400).json({ error: 'La palabra no puede superar los 50 caracteres' });
+    }
     await GuildConfig.findOneAndUpdate(
         { guildId: req.params.guildId },
         { $addToSet: { 'automod.badWords': word.toLowerCase().trim() } },
@@ -308,9 +354,10 @@ router.post('/guilds/:guildId/automod/badwords', requireAuth, requireGuildAccess
 
 // ── DELETE /api/guilds/:guildId/automod/badwords/:word ────────────────────────
 router.delete('/guilds/:guildId/automod/badwords/:word', requireAuth, requireGuildAccess, async (req, res) => {
+    // Words are always stored lowercased — normalise so the delete always matches
     await GuildConfig.findOneAndUpdate(
         { guildId: req.params.guildId },
-        { $pull: { 'automod.badWords': req.params.word } }
+        { $pull: { 'automod.badWords': String(req.params.word).toLowerCase() } }
     );
     res.json({ ok: true });
 });
@@ -367,6 +414,77 @@ router.post('/servers/:guildId/leave', requireAuth, async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+});
+
+
+// ── GET /api/commands ────────────────────────────────────────────────────────
+// Metadata read straight from the loaded command modules (source of truth).
+router.get('/commands', requireAuth, (req, res) => {
+    const client = req.app.locals.client;
+    if (!client) return res.status(503).json({ error: 'Bot no disponible' });
+
+    const cmds = [...client.commands.values()].map(cmd => {
+        // PermissionFlagsBits values are BigInt — they must be resolved to names
+        let permissions = [];
+        try {
+            permissions = [...new PermissionsBitField(cmd.permissions || 0n).toArray()];
+        } catch { /* unknown bitfield — expose no permissions */ }
+
+        // Usage is derived from the SlashCommandBuilder when the command has one
+        let usage = `/${cmd.name}`;
+        let options = [];
+        if (cmd.data) {
+            try {
+                options = (cmd.data.toJSON().options || []).map(o => ({
+                    name: o.name,
+                    description: o.description || '',
+                    required: !!o.required,
+                }));
+                usage = [usage, ...options.map(o => `${o.required ? '' : '['}${o.name}${o.required ? '' : ']'}`)].join(' ');
+            } catch { /* keep the bare /name usage */ }
+        }
+
+        return {
+            name:        cmd.name,
+            description: cmd.description || 'Sin descripción.',
+            category:    cmd.category || 'misc',
+            cooldown:    cmd.cooldown || 0,
+            aliases:     cmd.aliases || [],
+            permissions,
+            usage,
+            options,
+        };
+    });
+
+    cmds.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+    res.json(cmds);
+});
+
+// ── GET /api/status ──────────────────────────────────────────────────────────
+// Operational telemetry for the Status page. Non-sensitive values only;
+// global guild/user counts are restricted to the bot owner.
+router.get('/status', requireAuth, (req, res) => {
+    const client = req.app.locals.client;
+    const used   = process.memoryUsage();
+    const uptime = process.uptime();
+    const isOwner = req.user.id === config.adminID;
+
+    const states = ['desconectada', 'conectada', 'conectando', 'desconectando'];
+
+    res.json({
+        online:      client?.ws?.status === 0,
+        ping:        client?.ws?.ping ?? null,
+        uptime,
+        uptimeStr:   `${Math.floor(uptime / 86400)}d ${Math.floor((uptime % 86400) / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`,
+        nodeVersion: process.version,
+        djsVersion,
+        memory:      Math.round(used.heapUsed / 1024 / 1024),
+        database:    states[mongoose.connection.readyState] || 'desconocida',
+        ...(isOwner && client ? {
+            guilds: client.guilds.cache.size,
+            users:  client.guilds.cache.reduce((a, g) => a + g.memberCount, 0),
+        } : {}),
+    });
 });
 
 module.exports = router;
